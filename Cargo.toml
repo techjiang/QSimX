@@ -1,0 +1,17 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/qsimx-core",
+    "crates/qsimx-cli",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+authors = ["科技酱 <official@tech.asoe.cn>"]
+
+[workspace.dependencies]
+rand = "0.9"
+thiserror = "2"
+qsimx = { package = "qsimx-core", path = "crates/qsimx-core" }
