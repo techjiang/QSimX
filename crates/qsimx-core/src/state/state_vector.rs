@@ -236,6 +236,28 @@ impl StateVector {
         Ok(())
     }
 
+    pub fn apply_cp(
+        &mut self,
+        control: usize,
+        target: usize,
+        theta: f64,
+    ) -> Result<(), StateVectorError> {
+        self.check_qubit(control)?;
+        self.check_qubit(target)?;
+        if control == target {
+            return Err(StateVectorError::SameQubit);
+        }
+        let target_bit = 1 << target;
+        let control_bit = 1 << control;
+        let phase = Complex::from_polar(1.0, theta);
+        for index in 0..self.amplitudes.len() {
+            if index & control_bit != 0 && index & target_bit != 0 {
+                self.amplitudes[index] *= phase;
+            }
+        }
+        Ok(())
+    }
+
     pub fn reduced_density_matrix(
         &self,
         qubit: usize,

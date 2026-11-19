@@ -72,6 +72,9 @@ impl Circuit {
     pub fn cz(&mut self, control: usize, target: usize) -> &mut Self {
         self.push(Gate::CZ(control, target))
     }
+    pub fn cp(&mut self, control: usize, target: usize, theta: f64) -> &mut Self {
+        self.push(Gate::CP(control, target, theta))
+    }
     pub fn swap(&mut self, a: usize, b: usize) -> &mut Self {
         self.push(Gate::Swap(a, b))
     }
@@ -140,6 +143,7 @@ fn gate_symbol(gate: &Gate) -> &'static str {
         Gate::RX(_, _) => "RX ",
         Gate::RY(_, _) => "RY ",
         Gate::RZ(_, _) => "RZ ",
+        Gate::CP(_, _, _) => "CP ",
         Gate::Swap(_, _) => "SW ",
         Gate::Toffoli(_, _, _) => "CCX",
         Gate::Custom1(_, _) => " U ",

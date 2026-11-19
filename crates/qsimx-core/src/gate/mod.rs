@@ -44,6 +44,7 @@ pub enum Gate {
     RZ(usize, f64),
     CX(usize, usize),
     CZ(usize, usize),
+    CP(usize, usize, f64),
     Swap(usize, usize),
     Toffoli(usize, usize, usize),
     Custom1(usize, [[Complex; 2]; 2]),
@@ -88,6 +89,7 @@ impl Gate {
             | Gate::RZ(q, _)
             | Gate::Custom1(q, _) => vec![q],
             Gate::CX(c, t) | Gate::CZ(c, t) | Gate::Swap(c, t) => vec![c, t],
+            Gate::CP(c, t, _) => vec![c, t],
             Gate::Toffoli(c1, c2, t) => vec![c1, c2, t],
         }
     }
@@ -106,6 +108,7 @@ impl Gate {
             Gate::RZ(q, theta) => format!("rz({}) q[{q}];", angle(theta)),
             Gate::CX(c, t) => format!("cx q[{c}],q[{t}];"),
             Gate::CZ(c, t) => format!("cz q[{c}],q[{t}];"),
+            Gate::CP(c, t, theta) => format!("cp({}) q[{c}],q[{t}];", angle(theta)),
             Gate::Swap(a, b) => format!("swap q[{a}],q[{b}];"),
             Gate::Toffoli(c1, c2, t) => format!("ccx q[{c1}],q[{c2}],q[{t}];"),
             Gate::Custom1(q, _) => format!("u3(0,0,0) q[{q}]; // custom gate"),
@@ -125,6 +128,7 @@ impl Gate {
             Gate::RZ(q, theta) => state.apply_1q(q, rz_matrix(theta)),
             Gate::CX(c, t) => state.apply_2q(c, t, PAULI_X),
             Gate::CZ(c, t) => state.apply_2q(c, t, PAULI_Z),
+            Gate::CP(c, t, theta) => state.apply_cp(c, t, theta),
             Gate::Custom1(q, matrix) => state.apply_1q(q, matrix),
             Gate::Swap(a, b) => {
                 state.apply_2q(a, b, PAULI_X)?;
