@@ -25,6 +25,7 @@ fn main() {
             let qubits = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
             run_qft(qubits, args.get(3).and_then(|s| s.parse().ok()).unwrap_or(1024));
         }
+        "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
             let mut circuit = Circuit::new(3);
             circuit.h(0).cnot(0, 1).cnot(0, 2);
@@ -117,6 +118,13 @@ fn run(circuit: &Circuit, shots: usize) {
             for (state, count) in result.sorted_counts() {
                 println!("  {state:0width$b}: {count}", width = circuit.qubits());
             }
+            let max = result.sorted_counts().iter().map(|(_, c)| *c).max().unwrap_or(1);
+            println!("histogram:");
+            for (state, count) in result.sorted_counts() {
+                let filled = (count * 32) / max;
+                let bar: String = std::iter::repeat('#').take(filled).collect();
+                println!("  {state:0width$b} | {bar:<32} {count}", width = circuit.qubits());
+            }
         }
         Err(err) => eprintln!("error: {err}"),
     }
@@ -124,6 +132,6 @@ fn run(circuit: &Circuit, shots: usize) {
 
 fn print_usage() {
     println!(
-        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n"
+        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli version\n"
     );
 }
