@@ -103,3 +103,16 @@ fn measurement_basis_expectations_are_right() {
     assert!(expectation(&state, Basis::Y, 0).unwrap().abs() < 1e-12);
     assert!(expectation(&state, Basis::Z, 0).unwrap().abs() < 1e-12);
 }
+
+
+#[test]
+fn fidelity_detects_identical_and_orthogonal_states() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(1);
+    let zero = sim.run_state(&circuit).unwrap();
+    assert!((zero.fidelity(&zero).unwrap() - 1.0).abs() < 1e-12);
+
+    circuit.x(0);
+    let one = sim.run_state(&circuit).unwrap();
+    assert!(zero.fidelity(&one).unwrap() < 1e-12);
+}

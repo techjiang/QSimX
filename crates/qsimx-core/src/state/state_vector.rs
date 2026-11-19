@@ -162,6 +162,26 @@ impl StateVector {
         self.amplitudes.iter().map(|a| a.norm_sqr()).sum()
     }
 
+    /// Squared overlap |<self|other>|^2.
+    pub fn fidelity(&self, other: &StateVector) -> Result<f64, StateVectorError> {
+        if self.qubits != other.qubits {
+            return Err(StateVectorError::WrongLength {
+                expected: self.amplitudes.len(),
+                actual: other.amplitudes.len(),
+            });
+        }
+        let overlap: Complex = self
+            .amplitudes
+            .iter()
+            .zip(&other.amplitudes)
+            .map(|(&a, &b)| a.conj() * b)
+            .fold(Complex::ZERO, |mut acc, value| {
+                acc += value;
+                acc
+            });
+        Ok(overlap.norm_sqr())
+    }
+
     pub fn probability(&self, basis_state: usize) -> f64 {
         self.amplitudes
             .get(basis_state)
