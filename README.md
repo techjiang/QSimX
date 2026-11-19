@@ -23,7 +23,20 @@ QSimX 是一个用 Rust 实现的高性能量子计算模拟器，目标是让�
 cargo test -p qsimx-core
 cargo run -p qsimx-cli -- bell 1024
 cargo run -p qsimx-cli -- ghz 3 1024
+cargo run -p qsimx-cli -- grover 3 1024
+cargo run -p qsimx-cli -- qft 3 1024
+cargo run -p qsimx-cli -- version
 ```
+
+## 迭代记录
+
+本轮连续 5 次增量更新：
+
+1. `SimulationResult::histogram_json()` 导出 JSON 直方图
+2. CLI 新增 `grover` / `qft` 示例电路，核心新增受控相位门 `CP`
+3. `StateVector::fidelity()` 计算状态保真度及测试
+4. CLI 输出终端文本直方图，新增 `version` 命令
+5. 补齐 README 与迭代说明
 
 ## Rust 示例
 
