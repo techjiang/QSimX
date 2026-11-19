@@ -44,6 +44,20 @@ impl SimulationResult {
         counts.sort_by_key(|&(state, _)| state);
         counts
     }
+
+    /// Render the measurement histogram as compact JSON.
+    pub fn histogram_json(&self, width: usize) -> String {
+        let entries: Vec<String> = self
+            .sorted_counts()
+            .iter()
+            .map(|(state, count)| {
+                format!(
+                    "{{\"state\":\"{state:0width$b}\",\"count\":{count}}}"
+                )
+            })
+            .collect();
+        format!("{{\"shots\":{},\"counts\":[{}]}}", self.shots, entries.join(","))
+    }
 }
 
 #[derive(Debug, Default)]

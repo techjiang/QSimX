@@ -11,3 +11,5 @@ pub mod prelude {
     pub use crate::measure::{computational_probability, expectation};
     pub use crate::state::{Basis, Complex, StateVector, StateVectorError};
 }
+
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
