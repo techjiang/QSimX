@@ -2,8 +2,9 @@ use std::env;
 
 use qsimx::prelude::{
     Circuit, Gate, GroverOracle, StateVector, StateVectorSimulator, grover_amplification_gain,
-    grover_search, grover_success_cumulative, grover_success_curve, qft, qft_average_probability,
-    qft_gate_density, qft_roundtrip_fidelity, qft_sparsity, recommended_grover_iterations,
+    grover_search, grover_success_cumulative, grover_success_curve, inverse_qft, qft,
+    qft_average_probability, qft_gate_density, qft_gate_symmetry, qft_roundtrip_fidelity,
+    qft_sparsity, recommended_grover_iterations,
 };
 
 fn main() {
@@ -61,6 +62,9 @@ fn main() {
         }
         "verify-m2-report" => {
             run_verify_m2_report(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
+        }
+        "verify-m2-cond" => {
+            run_verify_m2_cond(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
         }
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
@@ -589,6 +593,66 @@ fn run_verify_m2_report(qubits: usize) {
     println!("basis 0 parity: {:?}", state.basis_parity(0));
 }
 
+fn run_verify_m2_cond(qubits: usize) {
+    if qubits < 2 {
+        eprintln!("error: qubits must be at least 2");
+        return;
+    }
+    let targets: Vec<usize> = (0..qubits).collect();
+    let mut circuit = Circuit::new(qubits);
+    circuit.h(0);
+    for target in 1..qubits {
+        circuit.cnot(0, target);
+    }
+    let state = match StateVectorSimulator::new().run_state(&circuit) {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let forward = match qft(&targets, qubits) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let inverse = match inverse_qft(&targets, qubits) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let last = qubits - 1;
+    let conditional = match state.conditional_bit_probability(last, 0, 0, 0) {
+        Ok(value) => value,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    println!("qubits: {qubits}");
+    println!("conditional p(q{last}=0 | q0=0): {conditional:.6}");
+    println!(
+        "basis 0b01 bitwise and: {:?}",
+        state.basis_bitwise_and(0b01)
+    );
+    println!(
+        "basis 0b11 bitwise and: {:?}",
+        state.basis_bitwise_and(0b11)
+    );
+    println!(
+        "qft gate symmetry: {:.6}",
+        qft_gate_symmetry(&forward, &inverse)
+    );
+    println!(
+        "qft average probability: {:.8}",
+        qft_average_probability(&forward)
+    );
+}
+
 fn run(circuit: &Circuit, shots: usize) {
     match StateVectorSimulator::new().run(circuit, shots) {
         Ok(result) => {
@@ -621,6 +685,6 @@ fn run(circuit: &Circuit, shots: usize) {
 
 fn print_usage() {
     println!(
-        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli verify-m2-report [qubits]\n  qsimx-cli version\n"
+        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli verify-m2-report [qubits]\n  qsimx-cli verify-m2-cond [qubits]\n  qsimx-cli version\n"
     );
 }

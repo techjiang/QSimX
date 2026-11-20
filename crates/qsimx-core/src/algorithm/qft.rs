@@ -75,6 +75,14 @@ pub fn qft_average_probability(result: &QftResult) -> f64 {
     amplitudes.iter().map(|a| a.norm_sqr()).sum::<f64>() / amplitudes.len() as f64
 }
 
+/// Ratio of QFT gates to inverse-QFT gates; returns 1.0 when inverse has no gates.
+pub fn qft_gate_symmetry(result: &QftResult, inverse: &QftResult) -> f64 {
+    if inverse.circuit.gates().is_empty() {
+        return 1.0;
+    }
+    result.circuit.gates().len() as f64 / inverse.circuit.gates().len() as f64
+}
+
 /// Fidelity between the QFT output and the inverse-QFT output of a state.
 pub fn qft_roundtrip_fidelity(
     targets: &[usize],

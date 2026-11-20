@@ -305,6 +305,50 @@ impl StateVector {
         Ok((basis_state.count_ones() % 2) as u8)
     }
 
+    /// Probability that a basis state has the requested bit value on one qubit.
+    pub fn conditional_bit_probability(
+        &self,
+        qubit: usize,
+        bit: u8,
+        fixed_qubit: usize,
+        fixed_bit: u8,
+    ) -> Result<f64, StateVectorError> {
+        self.check_qubit(qubit)?;
+        self.check_qubit(fixed_qubit)?;
+        if qubit == fixed_qubit {
+            return Err(StateVectorError::SameQubit);
+        }
+        if bit > 1 || fixed_bit > 1 {
+            return Err(StateVectorError::WrongLength {
+                expected: 2,
+                actual: bit.max(fixed_bit) as usize + 1,
+            });
+        }
+        let target = self.amplitudes.iter().enumerate().filter(|(index, _)| {
+            let bit_value = ((index >> qubit) & 1) as u8;
+            let fixed_value = ((index >> fixed_qubit) & 1) as u8;
+            bit_value == bit && fixed_value == fixed_bit
+        });
+        Ok(target.map(|(_, amplitude)| amplitude.norm_sqr()).sum())
+    }
+
+    /// Bitwise AND of all set-bit positions in a basis state.
+    pub fn basis_bitwise_and(&self, basis_state: usize) -> Result<usize, StateVectorError> {
+        if basis_state >= self.amplitudes.len() {
+            return Err(StateVectorError::WrongLength {
+                expected: self.amplitudes.len(),
+                actual: basis_state + 1,
+            });
+        }
+        let mut result = usize::MAX;
+        for bit in 0..self.qubits {
+            if basis_state & (1 << bit) != 0 {
+                result &= bit;
+            }
+        }
+        Ok(if result == usize::MAX { 0 } else { result })
+    }
+
     /// Cumulative probability distribution indexed by basis state.
     pub fn cumulative_probabilities(&self) -> Vec<f64> {
         let mut cumulative = 0.0;

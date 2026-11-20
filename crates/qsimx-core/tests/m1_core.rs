@@ -454,3 +454,34 @@ fn iteration14_w_state_rejects_empty_and_duplicate_targets() {
     assert!(circuit.w_state(&[]).is_err());
     assert!(circuit.w_state(&[2]).is_err());
 }
+
+#[test]
+fn iteration15_conditional_bit_probability_is_normalized_per_condition() {
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).cnot(0, 1);
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    let q0_and_q1_zero = state.conditional_bit_probability(1, 0, 0, 0).unwrap();
+    let q0_and_q1_one = state.conditional_bit_probability(1, 1, 0, 0).unwrap();
+    assert!((q0_and_q1_zero - 0.5).abs() < 1e-12);
+    assert!((q0_and_q1_one).abs() < 1e-12);
+    assert!(state.conditional_bit_probability(0, 0, 0, 0).is_err());
+    assert!(state.conditional_bit_probability(1, 2, 0, 0).is_err());
+}
+
+#[test]
+fn iteration15_basis_bitwise_and_reports_set_bit_positions() {
+    let state = StateVector::zero(4).unwrap();
+    assert_eq!(state.basis_bitwise_and(0b0000).unwrap(), 0);
+    assert_eq!(state.basis_bitwise_and(0b0010).unwrap(), 1);
+    assert_eq!(state.basis_bitwise_and(0b0110).unwrap(), 0);
+    assert_eq!(state.basis_bitwise_and(0b1010).unwrap(), 1);
+    assert!(state.basis_bitwise_and(16).is_err());
+}
+
+#[test]
+fn iteration15_qft_gate_symmetry_is_stable() {
+    let targets = [0usize, 1, 2];
+    let forward = qft(&targets, 3).unwrap();
+    let inverse = inverse_qft(&targets, 3).unwrap();
+    assert!((qft_gate_symmetry(&forward, &inverse) - 1.0).abs() < 1e-12);
+}

@@ -201,3 +201,18 @@ cargo run -p qsimx-cli -- verify-m2-compact 3
 cargo test --workspace
 cargo run -p qsimx-cli -- verify-m2-report 3
 ```
+
+## 第十五轮迭代
+
+1. 新增 `StateVector::conditional_bit_probability()`，计算固定一个量子比特条件下的目标位概率。
+2. 新增 `StateVector::basis_bitwise_and()`，汇总基态中所有置位比特位置的按位与。
+3. 新增 `qft_gate_symmetry()`，比较 QFT 与逆 QFT 的门数对称性。
+4. CLI 新增 `verify-m2-cond`，集中输出条件概率、基态位运算与 QFT 对称性指标。
+5. 补充 3 项回归测试，覆盖新 API 的边界条件与数值结果。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-cond 3
+```
