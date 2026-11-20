@@ -405,3 +405,18 @@ cargo run -q -p qsimx-cli -- verify-m2-profile 3
 cargo test --workspace
 cargo run -q -p qsimx-cli -- verify-m2-signature 3
 ```
+
+## 第二十五轮迭代（本轮 5 次更新）
+
+1. `StateVector::active_uniformity_divergence()`：在非零结果上计算与均匀分布的 Jensen-Shannon 散度。
+2. `Circuit::entangling_gate_density()`：多量子比特门相对电路规模的密度。
+3. `grover_peak_width_ratio()`：成功率达到阈值的结果占比。
+4. `qft_phase_circular_skewness()`：傅里叶模式相位的圆偏度。
+5. CLI 新增 `verify-m2-fingerprint [qubits]`，并补充 5 项回归测试。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-fingerprint 3
+```

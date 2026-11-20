@@ -290,10 +290,12 @@ impl Circuit {
     pub fn controlled_gate_count(&self) -> usize {
         self.gates
             .iter()
-            .filter(|gate| matches!(
-                gate,
-                Gate::CX(_, _) | Gate::CZ(_, _) | Gate::CP(_, _, _) | Gate::Toffoli(_, _, _)
-            ))
+            .filter(|gate| {
+                matches!(
+                    gate,
+                    Gate::CX(_, _) | Gate::CZ(_, _) | Gate::CP(_, _, _) | Gate::Toffoli(_, _, _)
+                )
+            })
             .count()
     }
 
@@ -316,6 +318,14 @@ impl Circuit {
     /// Number of gates acting on exactly one qubit plus gates acting on exactly two.
     pub fn one_and_two_qubit_gate_count(&self) -> usize {
         self.gates_with_arity(1) + self.gates_with_arity(2)
+    }
+
+    /// Entangling gates per circuit qubit; zero for an empty circuit.
+    pub fn entangling_gate_density(&self) -> f64 {
+        if self.qubits == 0 {
+            return 0.0;
+        }
+        self.multi_qubit_gate_count() as f64 / self.qubits as f64
     }
 
     /// Ratio of entangling gates to all gates; zero for an empty circuit.

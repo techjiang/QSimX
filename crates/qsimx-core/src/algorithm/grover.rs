@@ -73,6 +73,18 @@ pub fn grover_success_path_length(
     Ok(curve.windows(2).map(|pair| (pair[1] - pair[0]).abs()).sum())
 }
 
+/// Ratio of the peak window width to the total evaluated curve length.
+pub fn grover_peak_width_ratio(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+    target: f64,
+) -> Result<f64, GroverError> {
+    let curve = grover_success_curve(qubits, oracle, max_iterations)?;
+    let width = curve.iter().filter(|&&p| p >= target).count();
+    Ok(width as f64 / curve.len() as f64)
+}
+
 /// Amplification gain over the uniform prior for a single marked state.
 pub fn grover_amplification_gain(qubits: usize, probability: f64) -> f64 {
     if qubits == 0 {

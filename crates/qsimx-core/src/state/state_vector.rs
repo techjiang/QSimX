@@ -673,6 +673,28 @@ impl StateVector {
         }
     }
 
+    /// Jensen-Shannon divergence from uniform over nonzero outcomes, in bits.
+    pub fn active_uniformity_divergence(&self) -> f64 {
+        let probabilities: Vec<f64> = self
+            .probabilities()
+            .into_iter()
+            .filter(|&probability| probability > 0.0)
+            .collect();
+        let n = probabilities.len() as f64;
+        if n <= 0.0 {
+            return 0.0;
+        }
+        let uniform = 1.0 / n;
+        let kl = |p: f64, q: f64| {
+            if p <= 0.0 { 0.0 } else { p * (p / q).log2() }
+        };
+        probabilities
+            .iter()
+            .map(|&p| (kl(p, uniform) + kl(uniform, p)) / 2.0)
+            .sum::<f64>()
+            .max(0.0)
+    }
+
     /// Jensen-Shannon divergence between the measurement distribution and the uniform baseline.
     pub fn uniformity_divergence(&self) -> f64 {
         let probabilities: Vec<f64> = self
@@ -686,11 +708,7 @@ impl StateVector {
         }
         let uniform = 1.0 / n;
         let kl = |p: f64, q: f64| {
-            if p <= 0.0 {
-                0.0
-            } else {
-                p * (p / q).log2()
-            }
+            if p <= 0.0 { 0.0 } else { p * (p / q).log2() }
         };
         let divergence: f64 = probabilities
             .iter()

@@ -1047,3 +1047,49 @@ fn iteration60_signature_metrics_are_stable_on_ghz_state() {
     let oracle = GroverOracle::marked(0b111);
     assert!(grover_success_kurtosis(3, &oracle, 6).unwrap().is_finite());
 }
+
+#[test]
+fn iteration61_active_uniformity_divergence_ignores_zero_outcomes() {
+    let zero = StateVector::zero(2).unwrap();
+    assert!(zero.active_uniformity_divergence().abs() < 1e-12);
+
+    let mut circuit = Circuit::new(2);
+    circuit.h(0);
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!(state.active_uniformity_divergence().abs() < 1e-12);
+}
+
+#[test]
+fn iteration62_entangling_gate_density_scales_with_qubits() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).cnot(0, 1).cnot(1, 2);
+    assert!((circuit.entangling_gate_density() - 2.0 / 3.0).abs() < 1e-12);
+    assert!(Circuit::new(0).entangling_gate_density().abs() < 1e-12);
+}
+
+#[test]
+fn iteration63_grover_peak_width_ratio_is_bounded() {
+    let oracle = GroverOracle::marked(0b11);
+    let ratio = grover_peak_width_ratio(2, &oracle, 6, 0.5).unwrap();
+    assert!((0.0..=1.0).contains(&ratio));
+    assert!(grover_peak_width_ratio(0, &oracle, 2, 0.5).is_err());
+}
+
+#[test]
+fn iteration64_qft_phase_circular_skewness_is_finite() {
+    let result = qft(&[0, 1, 2], 3).unwrap();
+    assert!(qft_phase_circular_skewness(&result).is_finite());
+    assert!((-1.0..=1.0).contains(&qft_phase_circular_skewness(&result)));
+}
+
+#[test]
+fn iteration65_fingerprint_metrics_are_stable_on_ghz_state() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).cnot(0, 1).cnot(0, 2);
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!(state.active_uniformity_divergence().abs() < 1e-12);
+    assert!((state.active_uniformity_divergence()).is_finite());
+    assert!((circuit.entangling_gate_density() - 2.0 / 3.0).abs() < 1e-12);
+    let oracle = GroverOracle::marked(0b111);
+    assert!((0.0..=1.0).contains(&grover_peak_width_ratio(3, &oracle, 6, 0.5).unwrap()));
+}
