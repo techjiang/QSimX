@@ -390,3 +390,18 @@ cargo run -q -p qsimx-cli -- verify-m2-stats 3
 cargo test --workspace
 cargo run -q -p qsimx-cli -- verify-m2-profile 3
 ```
+
+## 第十一轮迭代
+
+1. `StateVector::uniformity_divergence()` 衡量测量分布与均匀分布的对称散度
+2. `Circuit::controlled_gate_count()` 统计受控门数量
+3. `qft_phase_resultant_length()` 描述 QFT 相位圆均值长度
+4. `grover_success_kurtosis()` 描述 Grover 成功概率曲线的峰度
+5. CLI 新增 `verify-m2-signature [qubits]`，并补充 5 项回归测试
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-signature 3
+```

@@ -1001,3 +1001,49 @@ fn iteration55_profile_statistics_are_stable() {
     assert!((state.peak_concentration() - 4.0).abs() < 1e-12);
     assert!((circuit.gate_width_entropy() - 0.9182958340544896).abs() < 1e-12);
 }
+
+#[test]
+fn iteration56_uniformity_divergence_handles_sparse_and_uniform_states() {
+    let zero = StateVector::zero(2).unwrap();
+    assert!(zero.uniformity_divergence() >= 0.0);
+
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).h(1);
+    let uniform = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!(uniform.uniformity_divergence().abs() < 1e-12);
+}
+
+#[test]
+fn iteration57_controlled_gate_count_counts_control_registers() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).cnot(0, 1).cp(0, 2, 0.5).toffoli(0, 1, 2);
+    assert_eq!(circuit.controlled_gate_count(), 3);
+    assert_eq!(Circuit::new(2).controlled_gate_count(), 0);
+}
+
+#[test]
+fn iteration58_qft_phase_resultant_length_is_bounded() {
+    let result = qft(&[0, 1, 2], 3).unwrap();
+    assert!((0.0..=1.0).contains(&qft_phase_resultant_length(&result)));
+}
+
+#[test]
+fn iteration59_grover_success_kurtosis_is_finite() {
+    let oracle = GroverOracle::marked(0b11);
+    let kurtosis = grover_success_kurtosis(2, &oracle, 5).unwrap();
+    assert!(kurtosis.is_finite());
+    assert!(grover_success_kurtosis(0, &oracle, 2).is_err());
+}
+
+#[test]
+fn iteration60_signature_metrics_are_stable_on_ghz_state() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).cnot(0, 1).cnot(0, 2);
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!(state.uniformity_divergence().is_finite());
+    assert_eq!(circuit.controlled_gate_count(), 2);
+    let result = qft(&[0, 1, 2], 3).unwrap();
+    assert!((0.0..=1.0).contains(&qft_phase_resultant_length(&result)));
+    let oracle = GroverOracle::marked(0b111);
+    assert!(grover_success_kurtosis(3, &oracle, 6).unwrap().is_finite());
+}

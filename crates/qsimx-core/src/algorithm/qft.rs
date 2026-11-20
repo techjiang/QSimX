@@ -228,3 +228,25 @@ pub fn qft_gate_fidelity(result: &QftResult, qubits: usize) -> Result<f64, QftRo
     let fidelity = result.state.fidelity(&ideal)?;
     Ok(fidelity.clamp(0.0, 1.0))
 }
+
+/// Resultant length of nonzero Fourier-mode phases in `[0, 1]`.
+pub fn qft_phase_resultant_length(result: &QftResult) -> f64 {
+    let mut cos_sum = 0.0;
+    let mut sin_sum = 0.0;
+    let mut count = 0usize;
+    for amplitude in result.state.amplitudes() {
+        if amplitude.norm_sqr() <= f64::EPSILON {
+            continue;
+        }
+        let phase = amplitude.arg();
+        cos_sum += phase.cos();
+        sin_sum += phase.sin();
+        count += 1;
+    }
+    if count == 0 {
+        return 0.0;
+    }
+    (cos_sum / count as f64)
+        .hypot(sin_sum / count as f64)
+        .clamp(0.0, 1.0)
+}

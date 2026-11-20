@@ -286,6 +286,17 @@ impl Circuit {
             .count()
     }
 
+    /// Number of controlled gates, counting each control register once.
+    pub fn controlled_gate_count(&self) -> usize {
+        self.gates
+            .iter()
+            .filter(|gate| matches!(
+                gate,
+                Gate::CX(_, _) | Gate::CZ(_, _) | Gate::CP(_, _, _) | Gate::Toffoli(_, _, _)
+            ))
+            .count()
+    }
+
     /// Shannon entropy of the distribution of gate widths, in bits.
     pub fn gate_width_entropy(&self) -> f64 {
         if self.gates.is_empty() {

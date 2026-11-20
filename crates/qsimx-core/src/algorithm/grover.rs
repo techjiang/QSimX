@@ -125,6 +125,22 @@ pub fn grover_success_skewness(
     Ok(moment3 / moment2.powf(1.5))
 }
 
+/// Excess kurtosis of the Grover success probabilities across the evaluated iterations.
+pub fn grover_success_kurtosis(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> Result<f64, GroverError> {
+    let curve = grover_success_curve(qubits, oracle, max_iterations)?;
+    let mean = curve.iter().sum::<f64>() / curve.len() as f64;
+    let moment2 = curve.iter().map(|p| (p - mean).powi(2)).sum::<f64>() / curve.len() as f64;
+    if moment2 <= f64::EPSILON {
+        return Ok(0.0);
+    }
+    let moment4 = curve.iter().map(|p| (p - mean).powi(4)).sum::<f64>() / curve.len() as f64;
+    Ok(moment4 / moment2.powi(2) - 3.0)
+}
+
 pub fn grover_search(
     qubits: usize,
     oracle: &GroverOracle,
