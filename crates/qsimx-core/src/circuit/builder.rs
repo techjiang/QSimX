@@ -249,6 +249,14 @@ impl Circuit {
             .count()
     }
 
+    /// Ratio of continuous-parameter gates to all gates; zero for an empty circuit.
+    pub fn parameterized_gate_ratio(&self) -> f64 {
+        if self.gates.is_empty() {
+            return 0.0;
+        }
+        self.parameterized_gate_count() as f64 / self.gates.len() as f64
+    }
+
     /// Number of gates acting on more than one qubit.
     pub fn multi_qubit_gate_count(&self) -> usize {
         self.gates

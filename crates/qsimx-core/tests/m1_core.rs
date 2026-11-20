@@ -780,3 +780,11 @@ fn iteration29_probability_gini_measures_concentration() {
     let uniform = StateVectorSimulator::new().run_state(&circuit).unwrap();
     assert!(uniform.probability_gini().abs() < 1e-12);
 }
+
+#[test]
+fn iteration30_parameterized_gate_ratio_tracks_angle_gates() {
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).rx(0, 0.5).cp(0, 1, 0.25).x(1);
+    assert!((circuit.parameterized_gate_ratio() - 0.5).abs() < 1e-12);
+    assert!((Circuit::new(1).parameterized_gate_ratio() - 0.0).abs() < 1e-12);
+}
