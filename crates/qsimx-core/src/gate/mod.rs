@@ -76,6 +76,48 @@ pub fn rz_matrix(theta: f64) -> [[Complex; 2]; 2] {
 }
 
 impl Gate {
+    /// Stable human-readable name for this gate.
+    pub fn name(&self) -> &'static str {
+        match self {
+            Gate::H(_) => "H",
+            Gate::X(_) => "X",
+            Gate::Y(_) => "Y",
+            Gate::Z(_) => "Z",
+            Gate::S(_) => "S",
+            Gate::T(_) => "T",
+            Gate::RX(_, _) => "RX",
+            Gate::RY(_, _) => "RY",
+            Gate::RZ(_, _) => "RZ",
+            Gate::CX(_, _) => "CX",
+            Gate::CZ(_, _) => "CZ",
+            Gate::CP(_, _, _) => "CP",
+            Gate::Swap(_, _) => "SWAP",
+            Gate::Toffoli(_, _, _) => "TOFFOLI",
+            Gate::Custom1(_, _) => "U",
+        }
+    }
+
+    /// QASM gate name accepted by qelib1.inc.
+    pub fn qasm_name(&self) -> &'static str {
+        match self {
+            Gate::H(_) => "h",
+            Gate::X(_) => "x",
+            Gate::Y(_) => "y",
+            Gate::Z(_) => "z",
+            Gate::S(_) => "s",
+            Gate::T(_) => "t",
+            Gate::RX(_, _) => "rx",
+            Gate::RY(_, _) => "ry",
+            Gate::RZ(_, _) => "rz",
+            Gate::CX(_, _) => "cx",
+            Gate::CZ(_, _) => "cz",
+            Gate::CP(_, _, _) => "cp",
+            Gate::Swap(_, _) => "swap",
+            Gate::Toffoli(_, _, _) => "ccx",
+            Gate::Custom1(_, _) => "u3",
+        }
+    }
+
     pub fn qubits(&self) -> Vec<usize> {
         match *self {
             Gate::H(q)

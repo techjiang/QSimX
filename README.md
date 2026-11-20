@@ -17,6 +17,14 @@ QSimX 是一个用 Rust 实现的高性能量子计算模拟器，目标是让�
 
 后续里程碑：M2（Grover/QFT + 可视化）、M3（噪声/GPU/MPS/Python 绑定）、M4（Web/WASM/导出/CLI 生态）。
 
+## 第七轮迭代
+
+1. 新增 `StateVector::amplitude_string()`，统一振幅文本格式。
+2. 新增 `StateVector::cumulative_probabilities()` 与 `Gate::name()`。
+3. 新增 `Circuit::depth()` 与 `Circuit::gate_counts()`。
+4. 新增 `SimulationResult::shannon_entropy()`、`top_counts()`，以及 CLI `inspect` 命令。
+5. 补齐回归测试与文档；`git diff --check` 无空白错误。
+
 ## 快速开始
 
 ```bash
@@ -25,6 +33,8 @@ cargo run -p qsimx-cli -- bell 1024
 cargo run -p qsimx-cli -- ghz 3 1024
 cargo run -p qsimx-cli -- grover 3 1024
 cargo run -p qsimx-cli -- qft 3 1024
+cargo run -p qsimx-cli -- inspect 3
+cargo run -p qsimx-cli -- summary9 2
 cargo run -p qsimx-cli -- version
 ```
 
@@ -37,6 +47,36 @@ cargo run -p qsimx-cli -- version
 3. `StateVector::fidelity()` 计算状态保真度及测试
 4. CLI 输出终端文本直方图，新增 `version` 命令
 5. 补齐 README 与迭代说明
+
+## 第八轮迭代
+
+1. `StateVector::zero_probability()` 计算单量子比特零态概率
+2. `StateVector::phase()` 返回基态振幅相位
+3. `Gate::qasm_name()` 提供稳定 QASM 门名
+4. `Circuit::summary()` 汇总量子比特数、门数与深度
+5. `SimulationResult::state_fidelity()` 计算结果态与参考态保真度
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -p qsimx-cli -- standard 3
+```
+
+## 第九轮迭代
+
+1. `StateVector::one_probability()` 计算单量子比特一态概率
+2. `Circuit::bell_pair()` 快速构造 Bell 态电路
+3. `SimulationResult::most_likely()` 返回最可能测量结果及其频率
+4. CLI 新增 `summary9 [qubits]` 命令，集中展示本轮指标
+5. 补齐 3 项回归测试与 README 记录
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -p qsimx-cli -- summary9 2
+```
 
 ## Rust 示例
 

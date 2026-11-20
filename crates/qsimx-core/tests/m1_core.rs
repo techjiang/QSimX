@@ -116,3 +116,82 @@ fn fidelity_detects_identical_and_orthogonal_states() {
     let one = sim.run_state(&circuit).unwrap();
     assert!(zero.fidelity(&one).unwrap() < 1e-12);
 }
+
+
+#[test]
+fn iteration7_helpers_work() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).cnot(0, 1).cnot(0, 2);
+    let state = sim.run_state(&circuit).unwrap();
+
+    let cumulative = state.cumulative_probabilities();
+    assert_eq!(cumulative.len(), 8);
+    assert!((cumulative[0] - 0.5).abs() < 1e-12);
+    assert!((cumulative[7] - 1.0).abs() < 1e-12);
+
+    assert_eq!(circuit.depth(), 3);
+    assert_eq!(circuit.gate_counts().get("H"), Some(&1));
+    assert_eq!(circuit.gate_counts().get("CX"), Some(&2));
+
+    let result = sim.run(&circuit, 1024).unwrap();
+    assert!((result.shannon_entropy() - 1.0).abs() < 0.05);
+    assert_eq!(result.top_counts(2).len(), 2);
+    assert!(state.amplitude_string(0, 6).contains('+'));
+}
+
+#[test]
+fn iteration8_state_and_circuit_helpers_work() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(1);
+    circuit.h(0);
+    let state = sim.run_state(&circuit).unwrap();
+
+    assert!((state.zero_probability(0).unwrap() - 0.5).abs() < 1e-12);
+    assert!(state.phase(0).abs() < 1e-12);
+    assert_eq!(circuit.summary(), (1, 1, 1));
+    assert_eq!(circuit.gates()[0].qasm_name(), "h");
+    assert!((state.fidelity(&state).unwrap() - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration8_result_fidelity_matches_state() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).cnot(0, 1);
+    let result = sim.run(&circuit, 128).unwrap();
+    let reference = sim.run_state(&circuit).unwrap();
+    assert!((result.state_fidelity(&reference).unwrap() - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration9_one_probability_complements_zero_probability() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(1);
+    circuit.h(0);
+    let state = sim.run_state(&circuit).unwrap();
+    let zero = state.zero_probability(0).unwrap();
+    let one = state.one_probability(0).unwrap();
+    assert!((zero - 0.5).abs() < 1e-12);
+    assert!((one - 0.5).abs() < 1e-12);
+    assert!((zero + one - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration9_bell_pair_builder_creates_expected_state() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(2);
+    circuit.bell_pair(0, 1);
+    let state = sim.run_state(&circuit).unwrap();
+    assert!((state.probability(0) - 0.5).abs() < 1e-12);
+    assert!((state.probability(3) - 0.5).abs() < 1e-12);
+}
+
+#[test]
+fn iteration9_most_likely_reports_dominant_outcome() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(1);
+    circuit.x(0);
+    let result = sim.run(&circuit, 256).unwrap();
+    assert_eq!(result.most_likely(), Some((1, 1.0)));
+}

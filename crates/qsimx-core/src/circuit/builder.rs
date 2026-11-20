@@ -16,6 +16,7 @@ pub enum QasmError {
 pub struct Circuit {
     qubits: usize,
     gates: Vec<Gate>,
+    layers: Vec<usize>,
 }
 
 impl Circuit {
@@ -23,6 +24,7 @@ impl Circuit {
         Self {
             qubits,
             gates: Vec::new(),
+            layers: vec![0; qubits],
         }
     }
 
@@ -35,6 +37,18 @@ impl Circuit {
     }
 
     pub fn push(&mut self, gate: Gate) -> &mut Self {
+        let gate_depth = gate
+            .qubits()
+            .iter()
+            .filter_map(|&q| self.layers.get(q).copied())
+            .max()
+            .unwrap_or(0)
+            + 1;
+        for q in gate.qubits() {
+            if q < self.layers.len() {
+                self.layers[q] = gate_depth;
+            }
+        }
         self.gates.push(gate);
         self
     }
@@ -111,6 +125,30 @@ impl Circuit {
             let _ = writeln!(output, "measure q[{q}] -> c[{q}];");
         }
         Ok(output)
+    }
+
+    /// Number of sequential gate layers: each gate occupies the layers of every qubit it touches.
+    pub fn depth(&self) -> usize {
+        self.layers.iter().copied().max().unwrap_or(0)
+    }
+
+    /// Count gates grouped by their stable names.
+    pub fn gate_counts(&self) -> std::collections::BTreeMap<&'static str, usize> {
+        let mut counts = std::collections::BTreeMap::new();
+        for gate in &self.gates {
+            *counts.entry(gate.name()).or_insert(0) += 1;
+        }
+        counts
+    }
+
+    /// Summary tuple used by CLI and tests: (qubits, gates, depth).
+    pub fn summary(&self) -> (usize, usize, usize) {
+        (self.qubits, self.gates.len(), self.depth())
+    }
+
+    /// Build a Bell state on two qubits.
+    pub fn bell_pair(&mut self, a: usize, b: usize) -> &mut Self {
+        self.h(a).cnot(a, b)
     }
 
     pub fn diagram(&self) -> String {

@@ -45,6 +45,44 @@ impl SimulationResult {
         counts
     }
 
+    /// Shannon entropy of the measurement distribution, in bits.
+    pub fn shannon_entropy(&self) -> f64 {
+        if self.shots == 0 {
+            return 0.0;
+        }
+        -self
+            .counts
+            .values()
+            .map(|&count| {
+                let p = count as f64 / self.shots as f64;
+                p * p.log2()
+            })
+            .sum::<f64>()
+    }
+
+    /// Squared overlap between this result and the simulated state of another circuit.
+    pub fn state_fidelity(&self, other_state: &crate::state::StateVector) -> Result<f64, SimulatorError> {
+        Ok(self.state.fidelity(other_state)?)
+    }
+
+    /// Highest-frequency measurement outcomes.
+    pub fn top_counts(&self, limit: usize) -> Vec<(usize, usize)> {
+        let mut counts: Vec<_> = self.counts.iter().map(|(&k, &v)| (k, v)).collect();
+        counts.sort_by(|a, b| b.1.cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
+        counts.truncate(limit);
+        counts
+    }
+
+    /// Most likely measurement outcome and its probability estimate.
+    pub fn most_likely(&self) -> Option<(usize, f64)> {
+        if self.shots == 0 {
+            return None;
+        }
+        self.top_counts(1)
+            .first()
+            .map(|&(state, count)| (state, count as f64 / self.shots as f64))
+    }
+
     /// Render the measurement histogram as compact JSON.
     pub fn histogram_json(&self, width: usize) -> String {
         let entries: Vec<String> = self

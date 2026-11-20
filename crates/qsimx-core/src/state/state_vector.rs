@@ -162,6 +162,14 @@ impl StateVector {
         self.amplitudes.iter().map(|a| a.norm_sqr()).sum()
     }
 
+    /// Render one amplitude in `a+bi` form with fixed precision.
+    pub fn amplitude_string(&self, basis_state: usize, precision: usize) -> String {
+        match self.amplitudes.get(basis_state) {
+            Some(a) => format!("{a:.precision$}"),
+            None => format!("{:.precision$}", Complex::ZERO),
+        }
+    }
+
     /// Squared overlap |<self|other>|^2.
     pub fn fidelity(&self, other: &StateVector) -> Result<f64, StateVectorError> {
         if self.qubits != other.qubits {
@@ -191,6 +199,43 @@ impl StateVector {
 
     pub fn probabilities(&self) -> Vec<f64> {
         self.amplitudes.iter().map(|a| a.norm_sqr()).collect()
+    }
+
+    /// Quantum phase of a basis-state amplitude, in radians.
+    pub fn phase(&self, basis_state: usize) -> f64 {
+        self.amplitudes
+            .get(basis_state)
+            .map(|amplitude| amplitude.arg())
+            .unwrap_or(0.0)
+    }
+
+    /// Probability of the |0> outcome for one measured qubit.
+    pub fn zero_probability(&self, qubit: usize) -> Result<f64, StateVectorError> {
+        self.check_qubit(qubit)?;
+        Ok(self
+            .amplitudes
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| index & (1 << qubit) == 0)
+            .map(|(_, amplitude)| amplitude.norm_sqr())
+            .sum())
+    }
+
+    /// Probability of the |1> outcome for one measured qubit.
+    pub fn one_probability(&self, qubit: usize) -> Result<f64, StateVectorError> {
+        Ok(1.0 - self.zero_probability(qubit)?)
+    }
+
+    /// Cumulative probability distribution indexed by basis state.
+    pub fn cumulative_probabilities(&self) -> Vec<f64> {
+        let mut cumulative = 0.0;
+        self.amplitudes
+            .iter()
+            .map(|a| {
+                cumulative += a.norm_sqr();
+                cumulative
+            })
+            .collect()
     }
 
     pub fn normalize(&mut self) {

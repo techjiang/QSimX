@@ -25,6 +25,12 @@ fn main() {
             let qubits = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
             run_qft(qubits, args.get(3).and_then(|s| s.parse().ok()).unwrap_or(1024));
         }
+        "standard" => run_standard(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3)),
+        "inspect" => {
+            let qubits = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
+            run_inspect(qubits);
+        }
+        "summary9" => run_summary9(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(2)),
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
             let mut circuit = Circuit::new(3);
@@ -108,6 +114,80 @@ fn run_qft(qubits: usize, shots: usize) {
     run(&circuit, shots);
 }
 
+fn run_standard(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: qubits must be at least 1");
+        return;
+    }
+    let mut circuit = Circuit::new(qubits);
+    circuit.h(0);
+    for target in 1..qubits {
+        circuit.cnot(0, target);
+    }
+    match StateVectorSimulator::new().run(&circuit, 1024) {
+        Ok(result) => {
+            let reference = StateVectorSimulator::new().run_state(&circuit).unwrap();
+            println!("standard summary: {:?}", circuit.summary());
+            println!("zero probability q0: {:.6}", result.state().zero_probability(0).unwrap());
+            println!("phase |0>: {:.6}", result.state().phase(0));
+            println!("state fidelity: {:.6}", result.state_fidelity(&reference).unwrap());
+            println!("gate names: {:?}", circuit.gates().iter().map(|gate| gate.name()).collect::<Vec<_>>());
+            println!("qasm names: {:?}", circuit.gates().iter().map(|gate| gate.qasm_name()).collect::<Vec<_>>());
+        }
+        Err(err) => eprintln!("error: {err}"),
+    }
+}
+
+fn run_inspect(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: qubits must be at least 1");
+        return;
+    }
+    let mut circuit = Circuit::new(qubits);
+    circuit.h(0);
+    for target in 1..qubits {
+        circuit.cnot(0, target);
+    }
+    match StateVectorSimulator::new().run(&circuit, 1024) {
+        Ok(result) => {
+            println!("circuit depth: {}", circuit.depth());
+            println!("gate counts: {:?}", circuit.gate_counts());
+            println!("nonzero amplitudes: {}", result.state().amplitudes().iter().filter(|a| a.norm_sqr() > 1e-12).count());
+            let probs = result.state().probabilities();
+            let max = probs.iter().copied().fold(0.0f64, f64::max);
+            println!("max probability: {max:.6}");
+            println!("shannon entropy: {:.6} bits", result.shannon_entropy());
+            println!("top counts: {:?}", result.top_counts(4));
+            for (state, _) in result.top_counts(4) {
+                println!(
+                    "  {state:0width$b}: {}",
+                    result.state().amplitude_string(state, 6),
+                    width = qubits
+                );
+            }
+        }
+        Err(err) => eprintln!("error: {err}"),
+    }
+}
+
+fn run_summary9(qubits: usize) {
+    if qubits < 2 {
+        eprintln!("error: summary9 needs at least 2 qubits");
+        return;
+    }
+    let mut circuit = Circuit::new(qubits);
+    circuit.bell_pair(0, 1);
+    match StateVectorSimulator::new().run(&circuit, 1024) {
+        Ok(result) => {
+            println!("summary: {:?}", circuit.summary());
+            println!("one probability q0: {:.6}", result.state().one_probability(0).unwrap());
+            println!("most likely: {:?}", result.most_likely());
+            println!("qasm names: {:?}", circuit.gates().iter().map(|g| g.qasm_name()).collect::<Vec<_>>());
+        }
+        Err(err) => eprintln!("error: {err}"),
+    }
+}
+
 fn run(circuit: &Circuit, shots: usize) {
     match StateVectorSimulator::new().run(circuit, shots) {
         Ok(result) => {
@@ -132,6 +212,6 @@ fn run(circuit: &Circuit, shots: usize) {
 
 fn print_usage() {
     println!(
-        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli version\n"
+        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli version\n"
     );
 }
