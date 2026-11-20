@@ -63,6 +63,19 @@ pub fn grover_success_curve(
         .collect()
 }
 
+/// Total absolute probability movement across all Grover iterations.
+pub fn grover_success_path_length(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> Result<f64, GroverError> {
+    let curve = grover_success_curve(qubits, oracle, max_iterations)?;
+    Ok(curve
+        .windows(2)
+        .map(|pair| (pair[1] - pair[0]).abs())
+        .sum())
+}
+
 /// Amplification gain over the uniform prior for a single marked state.
 pub fn grover_amplification_gain(qubits: usize, probability: f64) -> f64 {
     if qubits == 0 {

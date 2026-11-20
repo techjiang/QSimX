@@ -341,3 +341,20 @@ cargo run -q -p qsimx-cli -- verify-m2-advanced 3
 ```
 
 本机使用 Rust 1.100 与 GCC 12.2 真实执行；`cargo test --workspace` 72/72 通过。截图见 `qsimx_iter21_advanced.png`。
+
+## 第二十二轮迭代（本轮 5 次更新）
+
+1. `StateVector::tail_probability()`：报告最大基态概率之外的尾部概率质量。
+2. `Circuit::gates_with_arity()`：按门作用量子比特数统计门数量。
+3. `grover_success_path_length()`：累计 Grover 成功率曲线的绝对变化量。
+4. `qft_adjacent_phase_step()`：计算相邻傅里叶模式相位的平均变化，并按 pi 归一化。
+5. CLI 新增 `verify-m2-motion [qubits]`，汇总本轮指标；补充 4 项回归测试。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-motion 3
+```
+
+本机使用 Rust 1.100 与 GCC 12.2 真实执行；`cargo test --workspace` 84/84 通过。截图见 `qsimx_iter12.png`。

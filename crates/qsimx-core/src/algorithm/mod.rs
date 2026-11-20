@@ -10,10 +10,11 @@ pub use diagnostics::{
 pub use grover::{
     GroverAnalysisResult, GroverError, GroverOracle, GroverResult, grover_amplification_gain,
     grover_iterations, grover_recommended_gain, grover_search, grover_success_cumulative,
-    grover_success_curve, recommended_grover_iterations,
+    grover_success_curve, grover_success_path_length, recommended_grover_iterations,
 };
 pub use qft::{
     QftResult, QftRoundTripError, inverse_qft, qft, qft_average_probability, qft_density_balance,
-    qft_adjacent_phase_gap, qft_density_gap, qft_gate_balance, qft_gate_density,
-    qft_gate_fidelity, qft_gate_symmetry, qft_phase_balance, qft_roundtrip_fidelity, qft_sparsity,
+    qft_adjacent_phase_gap, qft_adjacent_phase_step, qft_density_gap, qft_gate_balance,
+    qft_gate_density, qft_gate_fidelity, qft_gate_symmetry, qft_phase_balance,
+    qft_roundtrip_fidelity, qft_sparsity,
 };

@@ -4,8 +4,8 @@ use qsimx::prelude::{
     Circuit, Gate, GroverOracle, StateVector, StateVectorSimulator, grover_amplification_gain,
     grover_first_success_iteration, grover_peak_delta, grover_peak_iteration, grover_peak_step,
     grover_peak_drop, grover_peak_width, grover_recommended_gain, grover_search, grover_success_area,
-    grover_success_cumulative, grover_success_curve, inverse_qft, qft, qft_adjacent_phase_gap,
-    qft_average_probability,
+    grover_success_cumulative, grover_success_curve, grover_success_path_length, inverse_qft, qft,
+    qft_adjacent_phase_gap, qft_adjacent_phase_step, qft_average_probability,
     qft_density_balance, qft_density_gap, qft_gate_balance, qft_gate_density, qft_gate_fidelity,
     qft_gate_symmetry, qft_pair_is_reversible, qft_phase_balance, qft_probability_imbalance,
     qft_roundtrip_fidelity, qft_sparsity, recommended_grover_iterations,
@@ -93,6 +93,9 @@ fn main() {
         }
         "verify-m2-curve" => {
             run_verify_m2_curve(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
+        }
+        "verify-m2-motion" => {
+            run_verify_m2_motion(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
         }
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
@@ -1094,7 +1097,7 @@ fn run(circuit: &Circuit, shots: usize) {
 
 fn print_usage() {
     println!(
-        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli verify-m2-report [qubits]\n  qsimx-cli verify-m2-cond [qubits]\n  qsimx-cli verify-m2-dist [qubits]\n  qsimx-cli verify-m2-balance [qubits]\n  qsimx-cli verify-m2-parity [qubits]\n  qsimx-cli verify-m2-diagnostics [qubits]\n  qsimx-cli verify-m2-next [qubits]\n  qsimx-cli verify-m2-advanced [qubits]\n  qsimx-cli verify-m2-shape [qubits]\n  qsimx-cli verify-m2-curve [qubits]\n  qsimx-cli version\n"
+        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli verify-m2-report [qubits]\n  qsimx-cli verify-m2-cond [qubits]\n  qsimx-cli verify-m2-dist [qubits]\n  qsimx-cli verify-m2-balance [qubits]\n  qsimx-cli verify-m2-parity [qubits]\n  qsimx-cli verify-m2-diagnostics [qubits]\n  qsimx-cli verify-m2-next [qubits]\n  qsimx-cli verify-m2-advanced [qubits]\n  qsimx-cli verify-m2-shape [qubits]\n  qsimx-cli verify-m2-curve [qubits]\n  qsimx-cli verify-m2-motion [qubits]\n  qsimx-cli version\n"
     );
 }
 
@@ -1234,4 +1237,48 @@ fn run_verify_m2_curve(qubits: usize) {
     println!("qft adjacent phase gap: {:.6}", qft_adjacent_phase_gap(&forward));
     println!("ghz odd parity probability: {:.6}", state.odd_parity_probability());
     println!("ghz single-qubit gates: {}", ghz.single_qubit_gate_count());
+}
+
+fn run_verify_m2_motion(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: qubits must be at least 1");
+        return;
+    }
+    let oracle = GroverOracle::marked((1usize << qubits) - 1);
+    let path_length = match grover_success_path_length(qubits, &oracle, 6) {
+        Ok(value) => value,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let targets: Vec<usize> = (0..qubits).collect();
+    let forward = match qft(&targets, qubits) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let mut ghz = Circuit::new(qubits);
+    ghz.h(0);
+    for target in 1..qubits {
+        ghz.cnot(0, target);
+    }
+    let state = match StateVectorSimulator::new().run_state(&ghz) {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+
+    println!("qubits: {qubits}");
+    println!("grover success path length: {path_length:.6}");
+    println!(
+        "qft adjacent phase step: {:.6}",
+        qft_adjacent_phase_step(&forward)
+    );
+    println!("ghz tail probability: {:.6}", state.tail_probability());
+    println!("ghz two-qubit gates: {}", ghz.gates_with_arity(2));
 }

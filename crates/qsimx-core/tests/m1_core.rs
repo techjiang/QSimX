@@ -866,9 +866,44 @@ fn iteration40_single_qubit_gate_count_excludes_multi_qubit_gates() {
 }
 
 #[test]
-fn iteration41_ghz_odd_parity_probability_is_zero() {
+fn iteration41_ghz_odd_parity_probability_is_half() {
     let mut circuit = Circuit::new(3);
     circuit.h(0).cnot(0, 1).cnot(0, 2);
     let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
-    assert!((state.odd_parity_probability() - 0.0).abs() < 1e-12);
+    assert!((state.odd_parity_probability() - 0.5).abs() < 1e-12);
+}
+
+#[test]
+fn iteration42_tail_probability_complements_max_probability() {
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).h(1);
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((state.tail_probability() - 0.75).abs() < 1e-12);
+    assert!((state.max_probability() + state.tail_probability() - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration43_gates_with_arity_counts_by_width() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).cnot(0, 1).toffoli(0, 1, 2);
+    assert_eq!(circuit.gates_with_arity(1), 1);
+    assert_eq!(circuit.gates_with_arity(2), 1);
+    assert_eq!(circuit.gates_with_arity(3), 1);
+    assert_eq!(circuit.gates_with_arity(4), 0);
+}
+
+#[test]
+fn iteration44_grover_success_path_length_is_non_negative() {
+    let oracle = GroverOracle::marked(0b11);
+    let path = grover_success_path_length(2, &oracle, 5).unwrap();
+    assert!(path >= 0.0);
+    assert!(grover_success_path_length(0, &oracle, 2).is_err());
+}
+
+#[test]
+fn iteration45_qft_adjacent_phase_step_is_bounded() {
+    let result = qft(&[0, 1, 2], 3).unwrap();
+    let step = qft_adjacent_phase_step(&result);
+    assert!((0.0..=2.0).contains(&step));
+    assert!(qft_adjacent_phase_step(&qft(&[0], 1).unwrap()).abs() < 1e-12);
 }

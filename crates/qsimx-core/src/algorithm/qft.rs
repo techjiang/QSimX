@@ -139,6 +139,25 @@ pub fn qft_adjacent_phase_gap(result: &QftResult) -> f64 {
         / std::f64::consts::PI
 }
 
+/// Average absolute phase difference between adjacent Fourier modes, normalized by pi.
+pub fn qft_adjacent_phase_step(result: &QftResult) -> f64 {
+    let phases: Vec<f64> = result
+        .state
+        .amplitudes()
+        .iter()
+        .filter_map(|amplitude| (amplitude.norm_sqr() > f64::EPSILON).then(|| amplitude.arg()))
+        .collect();
+    if phases.len() < 2 {
+        return 0.0;
+    }
+    phases
+        .windows(2)
+        .map(|pair| (pair[1] - pair[0]).abs())
+        .sum::<f64>()
+        / (phases.len() - 1) as f64
+        / std::f64::consts::PI
+}
+
 /// Fidelity between the QFT output and the inverse-QFT output of a state.
 pub fn qft_roundtrip_fidelity(
     targets: &[usize],

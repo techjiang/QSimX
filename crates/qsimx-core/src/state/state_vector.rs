@@ -429,6 +429,11 @@ impl StateVector {
         }
     }
 
+    /// Probability mass outside the most likely basis state.
+    pub fn tail_probability(&self) -> f64 {
+        (1.0 - self.max_probability()).max(0.0)
+    }
+
     /// Shannon entropy of the ideal measurement distribution, in bits.
     pub fn shannon_entropy(&self) -> f64 {
         self.amplitudes
