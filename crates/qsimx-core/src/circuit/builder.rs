@@ -68,6 +68,9 @@ impl Circuit {
     pub fn s(&mut self, q: usize) -> &mut Self {
         self.push(Gate::S(q))
     }
+    pub fn sdg(&mut self, q: usize) -> &mut Self {
+        self.push(Gate::SDG(q))
+    }
     pub fn t(&mut self, q: usize) -> &mut Self {
         self.push(Gate::T(q))
     }
@@ -177,6 +180,7 @@ fn gate_symbol(gate: &Gate) -> &'static str {
         Gate::Y(_) => " Y ",
         Gate::Z(_) | Gate::CZ(_, _) => " Z ",
         Gate::S(_) => " S ",
+        Gate::SDG(_) => "SDG",
         Gate::T(_) => " T ",
         Gate::RX(_, _) => "RX ",
         Gate::RY(_, _) => "RY ",

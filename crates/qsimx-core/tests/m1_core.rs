@@ -223,3 +223,18 @@ fn iteration10_expectation_z_matches_bloch_z() {
     assert!((z - state.bloch_vector(0).unwrap()[2]).abs() < 1e-12);
     assert!((z - 0.7_f64.cos()).abs() < 1e-12);
 }
+
+#[test]
+fn iteration10_sdg_inverts_s() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(1);
+    circuit.s(0).sdg(0);
+    let state = sim.run_state(&circuit).unwrap();
+    assert!((state.probability(0) - 1.0).abs() < 1e-12);
+
+    let mut circuit = Circuit::new(1);
+    circuit.sdg(0);
+    let qasm = circuit.to_qasm().unwrap();
+    assert!(qasm.contains("sdg q[0];"));
+    assert_eq!(circuit.gates()[0].name(), "SDG");
+}
