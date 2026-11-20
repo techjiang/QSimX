@@ -195,3 +195,20 @@ fn iteration9_most_likely_reports_dominant_outcome() {
     let result = sim.run(&circuit, 256).unwrap();
     assert_eq!(result.most_likely(), Some((1, 1.0)));
 }
+
+#[test]
+fn iteration10_result_probability_and_min_entropy_work() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(1);
+    circuit.h(0);
+    let result = sim.run(&circuit, 2048).unwrap();
+    let p0 = result.probability_by_state(0);
+    let p1 = result.probability_by_state(1);
+    assert!((p0 + p1 - 1.0).abs() < 1e-12);
+    assert!((p0 - 0.5).abs() < 0.05);
+    assert!((result.min_entropy() - 1.0).abs() < 0.05);
+
+    let empty = StateVectorSimulator::new().run(&circuit, 0).unwrap();
+    assert_eq!(empty.probability_by_state(0), 0.0);
+    assert_eq!(empty.min_entropy(), 0.0);
+}
