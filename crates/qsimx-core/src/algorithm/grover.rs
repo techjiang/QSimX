@@ -73,6 +73,24 @@ pub fn grover_success_path_length(
     Ok(curve.windows(2).map(|pair| (pair[1] - pair[0]).abs()).sum())
 }
 
+/// Mean absolute second difference of the Grover success curve.
+/// Larger values indicate a rougher oscillation profile.
+pub fn grover_success_roughness(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> Result<f64, GroverError> {
+    let curve = grover_success_curve(qubits, oracle, max_iterations)?;
+    if curve.len() < 3 {
+        return Ok(0.0);
+    }
+    let roughness: f64 = curve
+        .windows(3)
+        .map(|w| (w[2] - 2.0 * w[1] + w[0]).abs())
+        .sum();
+    Ok(roughness / (curve.len() - 2) as f64)
+}
+
 /// Ratio of the peak window width to the total evaluated curve length.
 pub fn grover_peak_width_ratio(
     qubits: usize,

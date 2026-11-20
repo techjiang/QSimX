@@ -9,7 +9,7 @@ pub use diagnostics::{
     qft_probability_imbalance, qft_uniform_deviation,
 };
 pub use grover::{
-    GroverAnalysisResult, GroverError, GroverOracle, GroverResult, grover_amplification_gain,
+    GroverAnalysisResult, GroverError, GroverOracle, GroverResult, grover_amplification_gain, grover_success_roughness,
     grover_iterations, grover_peak_width_ratio, grover_recommended_gain, grover_search,
     grover_success_cumulative, grover_success_curve, grover_success_kurtosis,
     grover_success_path_length, grover_success_skewness, recommended_grover_iterations,

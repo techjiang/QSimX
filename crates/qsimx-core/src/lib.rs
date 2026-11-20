@@ -8,7 +8,7 @@ pub mod prelude {
     pub use crate::VERSION;
     pub use crate::algorithm::{
         GroverAnalysisResult, GroverError, GroverOracle, GroverResult, QftResult,
-        QftRoundTripError, grover_amplification_gain, grover_ascending_steps,
+        QftRoundTripError, grover_amplification_gain, grover_success_roughness, grover_ascending_steps,
         grover_first_success_iteration, grover_iterations, grover_peak_delta, grover_peak_drop,
         grover_peak_iteration, grover_peak_step, grover_peak_width, grover_peak_width_ratio,
         grover_recommended_gain, grover_search, grover_success_area, grover_success_cumulative,

@@ -1114,3 +1114,12 @@ fn iteration67_gate_qubit_span_covers_touched_registers() {
     circuit.h(0);
     assert_eq!(circuit.gate_qubit_span(), 3);
 }
+
+#[test]
+fn iteration68_grover_success_roughness_is_finite() {
+    let oracle = GroverOracle::marked(0b111);
+    let roughness = grover_success_roughness(3, &oracle, 6).unwrap();
+    assert!(roughness.is_finite());
+    assert!(roughness >= 0.0);
+    assert!(grover_success_roughness(0, &oracle, 2).is_err());
+}
