@@ -1,0 +1,39 @@
+$ cargo test --workspace
+test result: ok. 114 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests qsimx
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+
+$ cargo fmt --all -- --check
+ok (no diff)
+
+$ git diff --check
+ok (no whitespace errors)
+
+$ cargo run -q -p qsimx-cli -- version
+QSimX 0.1.0
+
+$ cargo run -q -p qsimx-cli -- verify-m2-spectrum 3
+qubits: 3
+grover normalized area: 0.232143
+qft phase pair coherence: 1.000000
+ghz outcome diversity: 0.500000
+ghz average gate load: 1.666667
+
+$ cargo run -q -p qsimx-cli -- bell 16
+circuit:
+q0:  H  X 
+q1: ─── X 
+
+probabilities: [0.5000000000000001, 0.0, 0.0, 0.5000000000000001]
+histogram: {"shots":16,"counts":[{"state":"00","count":8},{"state":"11","count":8}]}
+counts:
+  00: 8
+  11: 8
+histogram:
+  00 | ################################ 8
+  11 | ################################ 8
