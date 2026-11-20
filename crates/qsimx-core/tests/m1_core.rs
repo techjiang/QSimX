@@ -907,3 +907,46 @@ fn iteration45_qft_adjacent_phase_step_is_bounded() {
     assert!((0.0..=2.0).contains(&step));
     assert!(qft_adjacent_phase_step(&qft(&[0], 1).unwrap()).abs() < 1e-12);
 }
+
+#[test]
+fn iteration46_grover_success_variance_is_non_negative() {
+    let oracle = GroverOracle::marked(0b11);
+    let variance = grover_success_variance(2, &oracle, 5).unwrap();
+    assert!(variance >= 0.0);
+    assert!(grover_success_variance(0, &oracle, 2).is_err());
+}
+
+#[test]
+fn iteration47_grover_ascending_steps_are_bounded() {
+    let oracle = GroverOracle::marked(0b11);
+    let steps = grover_ascending_steps(2, &oracle, 5).unwrap();
+    assert!(steps <= 5);
+    assert!(grover_ascending_steps(0, &oracle, 2).is_err());
+}
+
+#[test]
+fn iteration48_qft_uniform_deviation_is_non_negative() {
+    let result = qft(&[0, 1, 2], 3).unwrap();
+    let deviation = qft_uniform_deviation(&result);
+    assert!((0.0..=1.0).contains(&deviation));
+}
+
+#[test]
+fn iteration49_qft_inverse_distribution_gap_is_zero() {
+    let forward = qft(&[0, 1, 2], 3).unwrap();
+    let inverse = inverse_qft(&[0, 1, 2], 3).unwrap();
+    assert!(qft_inverse_distribution_gap(&forward, &inverse) >= 0.0);
+}
+
+#[test]
+fn iteration50_state_and_circuit_statistics_work() {
+    let zero = StateVector::zero(2).unwrap();
+    assert!((zero.probability_smoothness() - 1.0 / 3.0).abs() < 1e-12);
+    assert_eq!(zero.effective_outcomes(), 1);
+
+    let mut bell = Circuit::new(2);
+    bell.h(0).cnot(0, 1);
+    let bell_state = StateVectorSimulator::new().run_state(&bell).unwrap();
+    assert_eq!(bell_state.effective_outcomes(), 2);
+    assert_eq!(bell.one_and_two_qubit_gate_count(), 2);
+}

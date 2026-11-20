@@ -131,3 +131,49 @@ pub fn grover_success_area(
     let curve = crate::algorithm::grover_success_curve(qubits, oracle, max_iterations)?;
     Ok(curve.iter().sum::<f64>() / curve.len() as f64)
 }
+
+/// Variance of Grover success probabilities across the evaluated iterations.
+pub fn grover_success_variance(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> GroverAnalysisResult<f64> {
+    let curve = crate::algorithm::grover_success_curve(qubits, oracle, max_iterations)?;
+    let mean = curve.iter().sum::<f64>() / curve.len() as f64;
+    Ok(curve.iter().map(|p| (p - mean).powi(2)).sum::<f64>() / curve.len() as f64)
+}
+
+/// Number of Grover iterations whose success probability improves over the previous one.
+pub fn grover_ascending_steps(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> GroverAnalysisResult<usize> {
+    let curve = crate::algorithm::grover_success_curve(qubits, oracle, max_iterations)?;
+    Ok(curve.windows(2).filter(|p| p[1] > p[0]).count())
+}
+
+/// Largest probability imbalance between a QFT output and the uniform distribution.
+pub fn qft_uniform_deviation(result: &QftResult) -> f64 {
+    let probabilities = result.state.probabilities();
+    if probabilities.is_empty() {
+        return 0.0;
+    }
+    let uniform = 1.0 / probabilities.len() as f64;
+    probabilities
+        .iter()
+        .map(|p| (p - uniform).abs())
+        .fold(0.0_f64, f64::max)
+}
+
+/// Total variation distance between forward and inverse QFT output distributions.
+pub fn qft_inverse_distribution_gap(forward: &QftResult, inverse: &QftResult) -> f64 {
+    forward
+        .state
+        .probabilities()
+        .iter()
+        .zip(inverse.state.probabilities().iter())
+        .map(|(a, b)| (a - b).abs())
+        .sum::<f64>()
+        / 2.0
+}

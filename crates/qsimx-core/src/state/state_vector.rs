@@ -461,6 +461,22 @@ impl StateVector {
         2.0 * weighted / n - (n + 1.0) / n
     }
 
+    /// Mean absolute difference between consecutive basis-state probabilities.
+    pub fn probability_smoothness(&self) -> f64 {
+        let probabilities = self.probabilities();
+        if probabilities.len() < 2 {
+            return 0.0;
+        }
+        probabilities.windows(2).map(|p| (p[0] - p[1]).abs()).sum::<f64>()
+            / (probabilities.len() - 1) as f64
+    }
+
+    /// Effective branch count from participation ratio, capped by the state dimension.
+    pub fn effective_outcomes(&self) -> usize {
+        let dimension = self.amplitudes.len().max(1);
+        (self.participation_ratio().round() as usize).clamp(1, dimension)
+    }
+
     /// Shannon entropy per active qubit, normalized to `[0, 1]`.
     pub fn entropy_per_qubit(&self) -> f64 {
         let qubits = self.qubits.max(1) as f64;

@@ -358,3 +358,20 @@ cargo run -q -p qsimx-cli -- verify-m2-motion 3
 ```
 
 本机使用 Rust 1.100 与 GCC 12.2 真实执行；`cargo test --workspace` 84/84 通过。截图见 `qsimx_iter12.png`。
+
+## 第二十三轮迭代（本轮 5 次更新）
+
+1. `StateVector::probability_smoothness()`：测量概率分布的相邻平均变化量。
+2. `StateVector::effective_outcomes()`：由参与比导出的有效结果分支数。
+3. `Circuit::one_and_two_qubit_gate_count()`：统计单/双量子门总数。
+4. 算法诊断新增 `grover_success_variance()`、`grover_ascending_steps()`、`qft_uniform_deviation()`、`qft_inverse_distribution_gap()`。
+5. CLI 新增 `verify-m2-stats [qubits]`，补充 5 项回归测试与 README 记录。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-stats 3
+```
+
+本机使用 Rust 1.100 与 GCC 12.2 真实执行；`cargo test --workspace` 89/89 通过。截图见 `qsimx_iter13.png`。

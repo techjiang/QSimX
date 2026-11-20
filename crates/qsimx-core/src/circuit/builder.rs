@@ -286,6 +286,11 @@ impl Circuit {
             .count()
     }
 
+    /// Number of gates acting on exactly one qubit plus gates acting on exactly two.
+    pub fn one_and_two_qubit_gate_count(&self) -> usize {
+        self.gates_with_arity(1) + self.gates_with_arity(2)
+    }
+
     /// Ratio of entangling gates to all gates; zero for an empty circuit.
     pub fn multi_qubit_gate_ratio(&self) -> f64 {
         if self.gates.is_empty() {

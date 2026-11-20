@@ -4,8 +4,9 @@ mod qft;
 
 pub use diagnostics::{
     grover_first_success_iteration, grover_peak_delta, grover_peak_drop, grover_peak_iteration,
-    grover_peak_step, grover_peak_width, grover_success_area, qft_pair_is_reversible,
-    qft_probability_imbalance,
+    grover_ascending_steps, grover_peak_step, grover_peak_width, grover_success_area,
+    grover_success_variance, qft_inverse_distribution_gap, qft_pair_is_reversible,
+    qft_probability_imbalance, qft_uniform_deviation,
 };
 pub use grover::{
     GroverAnalysisResult, GroverError, GroverOracle, GroverResult, grover_amplification_gain,
