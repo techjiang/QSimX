@@ -236,6 +236,11 @@ impl Circuit {
         self.distinct_touching_qubits().len()
     }
 
+    /// Number of distinct qubits touched by at least one gate.
+    pub fn distinct_touching_qubit_count(&self) -> usize {
+        self.active_qubit_count()
+    }
+
     /// Number of gates whose definition depends on a continuous angle.
     pub fn parameterized_gate_count(&self) -> usize {
         self.gates

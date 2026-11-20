@@ -820,3 +820,11 @@ fn iteration34_qft_phase_balance_is_bounded() {
     let balance = qft_phase_balance(&result);
     assert!((0.0..=1.0).contains(&balance));
 }
+
+#[test]
+fn iteration35_distinct_touching_qubit_count_skips_idle_qubits() {
+    let mut circuit = Circuit::new(4);
+    circuit.h(0).cnot(0, 1);
+    assert_eq!(circuit.distinct_touching_qubit_count(), 2);
+    assert_eq!(Circuit::new(3).distinct_touching_qubit_count(), 0);
+}
