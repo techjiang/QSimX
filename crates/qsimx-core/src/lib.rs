@@ -8,8 +8,9 @@ pub mod prelude {
     pub use crate::VERSION;
     pub use crate::algorithm::{
         GroverOracle, GroverResult, QftResult, QftRoundTripError, grover_amplification_gain,
-        grover_iterations, grover_search, grover_success_curve, inverse_qft, qft, qft_gate_density,
-        qft_roundtrip_fidelity, qft_sparsity, recommended_grover_iterations,
+        grover_iterations, grover_search, grover_success_cumulative, grover_success_curve,
+        inverse_qft, qft, qft_average_probability, qft_gate_density, qft_roundtrip_fidelity,
+        qft_sparsity, recommended_grover_iterations,
     };
     pub use crate::circuit::{
         Circuit, QasmError, SimulationResult, SimulatorError, StateVectorSimulator, apply_gate,

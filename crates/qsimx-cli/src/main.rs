@@ -2,8 +2,8 @@ use std::env;
 
 use qsimx::prelude::{
     Circuit, Gate, GroverOracle, StateVector, StateVectorSimulator, grover_amplification_gain,
-    grover_search, grover_success_curve, qft, qft_gate_density, qft_roundtrip_fidelity,
-    qft_sparsity, recommended_grover_iterations,
+    grover_search, grover_success_cumulative, grover_success_curve, qft, qft_average_probability,
+    qft_gate_density, qft_roundtrip_fidelity, qft_sparsity, recommended_grover_iterations,
 };
 
 fn main() {
@@ -58,6 +58,9 @@ fn main() {
         }
         "verify-m2-compact" => {
             run_verify_m2_compact(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
+        }
+        "verify-m2-report" => {
+            run_verify_m2_report(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
         }
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
@@ -308,7 +311,7 @@ fn run_verify_m2(qubits: usize) {
     let transformed = qft(&targets, qubits);
 
     let mut w = Circuit::new(qubits);
-    w.w_state(&targets);
+    w.w_state(&targets).unwrap();
     let w_state = StateVectorSimulator::new().run_state(&w);
 
     let g = match grover {
@@ -525,6 +528,67 @@ fn run_verify_m2_compact(qubits: usize) {
     println!("{}", result.histogram_text(qubits, 32));
 }
 
+fn run_verify_m2_report(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: qubits must be at least 1");
+        return;
+    }
+    let targets: Vec<usize> = (0..qubits).collect();
+    let marked = (1usize << qubits) - 1;
+    let oracle = GroverOracle::marked(marked);
+    let grover = match grover_search(qubits, &oracle, recommended_grover_iterations(qubits)) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let qft_result = match qft(&targets, qubits) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let cumulative = match grover_success_cumulative(qubits, &oracle, grover.iterations) {
+        Ok(values) => values,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let mut w_circuit = Circuit::new(qubits);
+    if let Err(err) = w_circuit.w_state(&targets) {
+        eprintln!("error: {err}");
+        return;
+    }
+    let w_result = match StateVectorSimulator::new().run(&w_circuit, 16) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let state = StateVectorSimulator::new().run_state(&w_circuit).unwrap();
+
+    println!("qubits: {qubits}");
+    println!(
+        "grover marked probability: {:.6}",
+        grover.marked_probability
+    );
+    println!(
+        "grover cumulative peak: {:.6}",
+        cumulative.last().copied().unwrap_or(0.0)
+    );
+    println!(
+        "qft average probability: {:.8}",
+        qft_average_probability(&qft_result)
+    );
+    println!("qft gate density: {:.6}", qft_gate_density(&qft_result));
+    println!("w-state parity counts: {:?}", w_result.parity_counts());
+    println!("basis 0 parity: {:?}", state.basis_parity(0));
+}
+
 fn run(circuit: &Circuit, shots: usize) {
     match StateVectorSimulator::new().run(circuit, shots) {
         Ok(result) => {
@@ -557,6 +621,6 @@ fn run(circuit: &Circuit, shots: usize) {
 
 fn print_usage() {
     println!(
-        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli version\n"
+        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli verify-m2-report [qubits]\n  qsimx-cli version\n"
     );
 }

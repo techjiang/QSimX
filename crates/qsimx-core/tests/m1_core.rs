@@ -283,7 +283,7 @@ fn iteration10_analysis_helpers_work() {
     let sim = StateVectorSimulator::new();
 
     let mut w = Circuit::new(3);
-    w.w_state(&[0, 1, 2]);
+    w.w_state(&[0, 1, 2]).unwrap();
     let state = sim.run_state(&w).unwrap();
     assert_eq!(state.significant_basis_count(1e-12), 2);
     assert!((state.probabilities().iter().sum::<f64>() - 1.0).abs() < 1e-10);
@@ -411,4 +411,46 @@ fn iteration13_qft_density_and_grover_gain() {
     assert!((qft_gate_density(&qft) - 7.0 / 3.0).abs() < 1e-12);
     assert!((grover_amplification_gain(2, 0.25) - 1.0).abs() < 1e-12);
     assert!((grover_amplification_gain(3, 0.5) - 4.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration14_basis_parity_and_parity_counts_are_consistent() {
+    let mut circuit = Circuit::new(2);
+    circuit.x(1);
+    let result = StateVectorSimulator::new().run(&circuit, 8).unwrap();
+    assert_eq!(result.parity_counts(), [0, 8]);
+    assert_eq!(result.state().basis_parity(0b01).unwrap(), 1);
+    assert_eq!(result.state().basis_parity(0b10).unwrap(), 1);
+    assert!(result.state().basis_parity(4).is_err());
+}
+
+#[test]
+fn iteration14_grover_cumulative_is_monotonic() {
+    let oracle = GroverOracle::marked(0b111);
+    let cumulative = grover_success_cumulative(3, &oracle, 3).unwrap();
+    assert_eq!(cumulative.len(), 4);
+    assert!(cumulative.windows(2).all(|pair| pair[1] >= pair[0]));
+}
+
+#[test]
+fn iteration14_qft_average_probability_is_uniform() {
+    let result = qft(&[0, 1, 2], 3).unwrap();
+    assert!((qft_average_probability(&result) - 1.0 / 8.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration14_w_state_helper_builds_expected_ghz_state() {
+    let mut circuit = Circuit::new(3);
+    let targets = [0usize, 1, 2];
+    circuit.w_state(&targets).unwrap();
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((state.probability(0b000) - 0.5).abs() < 1e-12);
+    assert!((state.probability(0b111) - 0.5).abs() < 1e-12);
+}
+
+#[test]
+fn iteration14_w_state_rejects_empty_and_duplicate_targets() {
+    let mut circuit = Circuit::new(2);
+    assert!(circuit.w_state(&[]).is_err());
+    assert!(circuit.w_state(&[2]).is_err());
 }

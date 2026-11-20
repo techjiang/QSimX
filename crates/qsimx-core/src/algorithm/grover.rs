@@ -66,7 +66,27 @@ pub fn grover_amplification_gain(qubits: usize, probability: f64) -> f64 {
     if qubits == 0 {
         return 1.0;
     }
+    if qubits >= usize::BITS as usize {
+        return probability * (usize::MAX as f64);
+    }
     probability * (1usize << qubits) as f64
+}
+
+/// Cumulative Grover probability after each iteration, including the initial state.
+pub fn grover_success_cumulative(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> Result<Vec<f64>, GroverError> {
+    let curve = grover_success_curve(qubits, oracle, max_iterations)?;
+    let mut cumulative = 0.0;
+    Ok(curve
+        .into_iter()
+        .map(|probability| {
+            cumulative += probability;
+            cumulative
+        })
+        .collect())
 }
 
 pub fn grover_search(

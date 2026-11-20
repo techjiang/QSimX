@@ -139,6 +139,15 @@ impl SimulationResult {
             .join("\n")
     }
 
+    /// Measurement outcomes grouped by bitwise parity.
+    pub fn parity_counts(&self) -> [usize; 2] {
+        let mut counts = [0usize; 2];
+        for (&state, &count) in &self.counts {
+            counts[(state.count_ones() % 2) as usize] += count;
+        }
+        counts
+    }
+
     /// Render the measurement histogram as compact JSON.
     pub fn histogram_json(&self, width: usize) -> String {
         let entries: Vec<String> = self

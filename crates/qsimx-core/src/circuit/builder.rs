@@ -190,14 +190,31 @@ impl Circuit {
         self.h(a).cnot(a, b)
     }
 
-    /// Build an equal superposition over the active target basis states.
-    pub fn w_state(&mut self, targets: &[usize]) -> &mut Self {
+    /// Prepare an equal superposition over `targets`, like the existing W helper.
+    pub fn w_state(&mut self, targets: &[usize]) -> Result<&mut Self, QasmError> {
         if targets.is_empty() {
-            return self;
+            return Err(QasmError::EmptyCircuit);
+        }
+        for &target in targets {
+            self.check_target(target)?;
         }
         let first = targets[0];
         self.h(first);
-        self
+        for &target in targets.iter().skip(1) {
+            self.cnot(first, target);
+        }
+        Ok(self)
+    }
+
+    fn check_target(&self, target: usize) -> Result<(), QasmError> {
+        if target >= self.qubits {
+            Err(QasmError::QubitOutOfRange {
+                index: target,
+                qubits: self.qubits,
+            })
+        } else {
+            Ok(())
+        }
     }
 
     pub fn diagram(&self) -> String {

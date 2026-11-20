@@ -186,3 +186,18 @@ cargo run -p qsimx-cli -- verify-m2-final 3
 cargo test --workspace
 cargo run -p qsimx-cli -- verify-m2-compact 3
 ```
+
+## 第十四轮迭代
+
+1. 新增 `StateVector::basis_parity()`，返回基态的按位奇偶校验。
+2. 新增 `SimulationResult::parity_counts()`，按奇偶校验汇总测量计数。
+3. 新增 `Circuit::w_state()` 的边界校验，并保持其均匀叠加语义。
+4. 新增 `grover_success_cumulative()` 与 `qft_average_probability()`，补充算法累计指标。
+5. CLI 新增 `verify-m2-report`，集中输出本轮指标，并补充 5 项回归测试。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -p qsimx-cli -- verify-m2-report 3
+```

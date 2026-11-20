@@ -66,6 +66,15 @@ pub fn qft_gate_density(result: &QftResult) -> f64 {
     result.circuit.gates().len() as f64 / targets as f64
 }
 
+/// Average basis-state probability of a QFT output.
+pub fn qft_average_probability(result: &QftResult) -> f64 {
+    let amplitudes = result.state.amplitudes();
+    if amplitudes.is_empty() {
+        return 0.0;
+    }
+    amplitudes.iter().map(|a| a.norm_sqr()).sum::<f64>() / amplitudes.len() as f64
+}
+
 /// Fidelity between the QFT output and the inverse-QFT output of a state.
 pub fn qft_roundtrip_fidelity(
     targets: &[usize],

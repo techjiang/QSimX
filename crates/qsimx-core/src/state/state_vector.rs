@@ -294,6 +294,17 @@ impl StateVector {
         }
     }
 
+    /// Bitwise XOR parity of a basis state, useful for parity-check summaries.
+    pub fn basis_parity(&self, basis_state: usize) -> Result<u8, StateVectorError> {
+        if basis_state >= self.amplitudes.len() {
+            return Err(StateVectorError::WrongLength {
+                expected: self.amplitudes.len(),
+                actual: basis_state + 1,
+            });
+        }
+        Ok((basis_state.count_ones() % 2) as u8)
+    }
+
     /// Cumulative probability distribution indexed by basis state.
     pub fn cumulative_probabilities(&self) -> Vec<f64> {
         let mut cumulative = 0.0;
