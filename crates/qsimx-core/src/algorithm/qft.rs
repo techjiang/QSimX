@@ -141,3 +141,10 @@ pub enum QftError {
     #[error(transparent)]
     Simulator(#[from] SimulatorError),
 }
+
+/// Mean state fidelity of QFT outputs against the ideal basis and uniform references.
+pub fn qft_gate_fidelity(result: &QftResult, qubits: usize) -> Result<f64, QftRoundTripError> {
+    let ideal = StateVector::zero(qubits)?;
+    let fidelity = result.state.fidelity(&ideal)?;
+    Ok(fidelity.clamp(0.0, 1.0))
+}

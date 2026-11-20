@@ -796,3 +796,11 @@ fn iteration31_grover_success_area_stays_bounded() {
     assert!(area > 0.0 && area <= 1.0);
     assert!(grover_success_area(0, &oracle, 1).is_err());
 }
+
+#[test]
+fn iteration32_qft_gate_fidelity_is_bounded() {
+    let result = qft(&[0, 1], 2).unwrap();
+    let fidelity = qft_gate_fidelity(&result, 2).unwrap();
+    assert!((0.0..=1.0).contains(&fidelity));
+    assert!(qft_gate_fidelity(&result, 0).is_err());
+}

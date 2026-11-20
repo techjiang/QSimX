@@ -294,3 +294,20 @@ cargo run -q -p qsimx-cli -- verify-m2-next 3
 ```
 
 本机使用 Rust 1.100 与 C 工具链真实执行；`cargo test --workspace` 67/67 通过。截图见 `qsimx_iter20_next.png`。
+
+## 第二十一轮迭代（本轮 5 次更新）
+
+1. `StateVector::entropy_per_qubit()`：按量子比特数归一化香农熵。
+2. `StateVector::probability_gini()`：测量分布的基尼系数。
+3. `Circuit::parameterized_gate_ratio()`：连续参数门占比。
+4. `grover_success_area()`：Grover 成功率在时间上的平均值。
+5. `qft_gate_fidelity()` 与 CLI `verify-m2-advanced [qubits]`：汇总本轮指标。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-advanced 3
+```
+
+本机使用 Rust 1.100 与 GCC 12.2 真实执行；`cargo test --workspace` 72/72 通过。截图见 `qsimx_iter21_advanced.png`。
