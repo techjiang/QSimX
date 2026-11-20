@@ -1104,3 +1104,13 @@ fn iteration66_zero_one_balance_is_bounded() {
     let uniform = StateVectorSimulator::new().run_state(&circuit).unwrap();
     assert!((uniform.zero_one_balance() - 1.0).abs() < 1e-12);
 }
+
+#[test]
+fn iteration67_gate_qubit_span_covers_touched_registers() {
+    let mut circuit = Circuit::new(4);
+    assert_eq!(circuit.gate_qubit_span(), 0);
+    circuit.h(1).cnot(1, 3);
+    assert_eq!(circuit.gate_qubit_span(), 2);
+    circuit.h(0);
+    assert_eq!(circuit.gate_qubit_span(), 3);
+}

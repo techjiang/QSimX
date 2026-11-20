@@ -328,6 +328,16 @@ impl Circuit {
         self.multi_qubit_gate_count() as f64 / self.qubits as f64
     }
 
+    /// Difference between the highest and lowest qubit index touched by any gate.
+    /// Returns 0 for an empty circuit or when only one qubit is active.
+    pub fn gate_qubit_span(&self) -> usize {
+        let touched = self.distinct_touching_qubits();
+        match (touched.first(), touched.last()) {
+            (Some(&first), Some(&last)) => last - first,
+            _ => 0,
+        }
+    }
+
     /// Ratio of entangling gates to all gates; zero for an empty circuit.
     pub fn multi_qubit_gate_ratio(&self) -> f64 {
         if self.gates.is_empty() {
