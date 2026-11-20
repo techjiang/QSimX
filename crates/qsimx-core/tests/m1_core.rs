@@ -769,3 +769,14 @@ fn iteration28_entropy_per_qubit_normalizes_distributions() {
     let uniform = StateVectorSimulator::new().run_state(&circuit).unwrap();
     assert!((uniform.entropy_per_qubit() - 1.0).abs() < 1e-12);
 }
+
+#[test]
+fn iteration29_probability_gini_measures_concentration() {
+    let basis = StateVector::zero(2).unwrap();
+    assert!((basis.probability_gini() - 0.75).abs() < 1e-12);
+
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).h(1);
+    let uniform = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!(uniform.probability_gini().abs() < 1e-12);
+}

@@ -439,6 +439,23 @@ impl StateVector {
             .sum()
     }
 
+    /// Gini coefficient of the ideal measurement distribution.
+    pub fn probability_gini(&self) -> f64 {
+        let probabilities = self.probabilities();
+        let n = probabilities.len() as f64;
+        if n <= 1.0 {
+            return 0.0;
+        }
+        let mut sorted = probabilities;
+        sorted.sort_by(|a, b| a.total_cmp(b));
+        let weighted: f64 = sorted
+            .iter()
+            .enumerate()
+            .map(|(index, probability)| (index as f64 + 1.0) * probability)
+            .sum();
+        2.0 * weighted / n - (n + 1.0) / n
+    }
+
     /// Shannon entropy per active qubit, normalized to `[0, 1]`.
     pub fn entropy_per_qubit(&self) -> f64 {
         let qubits = self.qubits.max(1) as f64;
