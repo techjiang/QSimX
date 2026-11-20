@@ -435,3 +435,18 @@ cargo run -q -p qsimx-cli -- verify-m2-fingerprint 3
 cargo test --workspace
 cargo run -q -p qsimx-cli -- verify-m2-contour 3
 ```
+
+## 第二十七轮迭代（本轮 5 次更新）
+
+1. `StateVector::outcome_diversity()`：测量分布的 Simpson 多样性指数。
+2. `Circuit::average_gate_load()`：每个量子比特平均承受的门数量。
+3. `grover_normalized_success_area()`：Grover 成功率曲线的平均高度。
+4. `qft_phase_pair_coherence()`：非零傅里叶模式相位的圆相干性。
+5. CLI 新增 `verify-m2-spectrum [qubits]`，补充 5 项回归测试与 README 记录。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-spectrum 3
+```

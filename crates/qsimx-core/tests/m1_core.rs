@@ -1131,3 +1131,49 @@ fn iteration69_qft_phase_circular_kurtosis_is_bounded() {
     assert!(kurtosis.is_finite());
     assert!((-1.0..=1.0).contains(&kurtosis));
 }
+
+#[test]
+fn iteration70_outcome_diversity_is_bounded() {
+    let basis = StateVector::zero(2).unwrap();
+    assert!(basis.outcome_diversity().abs() < 1e-12);
+
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).h(1);
+    let uniform = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((uniform.outcome_diversity() - 0.75).abs() < 1e-12);
+}
+
+#[test]
+fn iteration71_average_gate_load_counts_touch_points() {
+    let mut circuit = Circuit::new(3);
+    assert!(circuit.average_gate_load().abs() < 1e-12);
+    circuit.h(0).cnot(0, 1);
+    assert!((circuit.average_gate_load() - 4.0 / 3.0).abs() < 1e-12);
+    assert!(Circuit::new(0).average_gate_load().abs() < 1e-12);
+}
+
+#[test]
+fn iteration72_grover_normalized_success_area_is_bounded() {
+    let oracle = GroverOracle::marked(0b111);
+    let area = grover_normalized_success_area(3, &oracle, 6).unwrap();
+    assert!((0.0..=1.0).contains(&area));
+    assert!(grover_normalized_success_area(0, &oracle, 2).is_err());
+}
+
+#[test]
+fn iteration73_qft_phase_pair_coherence_is_bounded() {
+    let result = qft(&[0, 1, 2], 3).unwrap();
+    let coherence = qft_phase_pair_coherence(&result);
+    assert!((0.0..=1.0).contains(&coherence));
+}
+
+#[test]
+fn iteration74_spectrum_metrics_are_stable_on_ghz_state() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).cnot(0, 1).cnot(0, 2);
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((state.outcome_diversity() - 0.5).abs() < 1e-12);
+    assert!((circuit.average_gate_load() - 4.0 / 3.0).abs() < 1e-12);
+    let oracle = GroverOracle::marked(0b111);
+    assert!((0.0..=1.0).contains(&grover_normalized_success_area(3, &oracle, 6).unwrap()));
+}
