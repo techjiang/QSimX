@@ -138,3 +138,18 @@ cargo run -p qsimx-cli -- verify-m2 3
 ```
 
 本机已安装 Rust 1.100 与 C 工具链后真实执行：`cargo test --workspace` 23/23 通过；`verify-m2 3` 输出 Grover 2 次迭代、标记态概率 0.500000、QFT 7 门、2 个显著振幅、QFT 态归一化。
+
+## 第十一轮迭代
+
+1. `StateVector::entanglement_entropy()` 计算单量子比特纠缠熵，`purity()` 计算约化态纯度。
+2. `SimulationResult::entropy_stability()` 估计测量分布的熵稳定性。
+3. `qft_roundtrip_fidelity()` 验证 QFT 与逆 QFT 的状态保真度。
+4. `grover_success_curve()` 输出从 0 次开始的 Grover 成功率曲线。
+5. CLI 新增 `verify-m2-plus`，集中展示纠缠熵、纯度、QFT 往返保真度和 Grover 曲线。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -p qsimx-cli -- verify-m2-plus 3
+```

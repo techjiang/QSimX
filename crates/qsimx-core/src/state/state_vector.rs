@@ -234,6 +234,33 @@ impl StateVector {
         Ok(1.0 - self.zero_probability(qubit)?)
     }
 
+    /// Von Neumann entropy of one qubit, in bits.
+    pub fn entanglement_entropy(&self, qubit: usize) -> Result<f64, StateVectorError> {
+        let rho = self.reduced_density_matrix(qubit)?;
+        let trace = rho[0][0].re + rho[1][1].re;
+        if trace <= f64::EPSILON {
+            return Ok(0.0);
+        }
+        let det = rho[0][0].re * rho[1][1].re - rho[0][1].norm_sqr();
+        let discriminant = (trace * trace - 4.0 * det).max(0.0).sqrt();
+        let lambda1 = ((trace + discriminant) / 2.0).clamp(0.0, 1.0);
+        let lambda2 = ((trace - discriminant) / 2.0).clamp(0.0, 1.0);
+        let term = |lambda: f64| {
+            if lambda > f64::EPSILON {
+                -lambda * lambda.log2()
+            } else {
+                0.0
+            }
+        };
+        Ok(term(lambda1) + term(lambda2))
+    }
+
+    /// Purity of one qubit's reduced density matrix.
+    pub fn purity(&self, qubit: usize) -> Result<f64, StateVectorError> {
+        let rho = self.reduced_density_matrix(qubit)?;
+        Ok(rho[0][0].norm_sqr() + 2.0 * rho[0][1].norm_sqr() + rho[1][1].norm_sqr())
+    }
+
     /// Cumulative probability distribution indexed by basis state.
     pub fn cumulative_probabilities(&self) -> Vec<f64> {
         let mut cumulative = 0.0;

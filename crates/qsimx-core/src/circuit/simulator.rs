@@ -91,6 +91,29 @@ impl SimulationResult {
             .map(|&(state, count)| (state, count as f64 / self.shots as f64))
     }
 
+    /// Sample standard deviation of the measurement distribution in bits.
+    pub fn entropy_stability(&self) -> f64 {
+        if self.shots < 2 {
+            return 0.0;
+        }
+        let mean = self.shannon_entropy();
+        let variance = self
+            .counts
+            .values()
+            .map(|&count| {
+                let p = count as f64 / self.shots as f64;
+                let sample_entropy = if p > 0.0 && p < 1.0 {
+                    -p * p.log2() - (1.0 - p) * (1.0 - p).log2()
+                } else {
+                    0.0
+                };
+                (sample_entropy - mean).powi(2)
+            })
+            .sum::<f64>()
+            / (self.shots - 1) as f64;
+        variance.sqrt()
+    }
+
     /// Render the measurement histogram as compact JSON.
     pub fn histogram_json(&self, width: usize) -> String {
         let entries: Vec<String> = self

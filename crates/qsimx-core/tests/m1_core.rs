@@ -302,3 +302,47 @@ fn iteration10_grover_iteration_helper_is_bounded() {
     assert!(recommended_grover_iterations(8) >= 1);
     assert_eq!(grover_iterations(8, 0), 1);
 }
+
+#[test]
+fn iteration11_entanglement_and_purity_are_complementary() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(2);
+    circuit.bell_pair(0, 1);
+    let state = sim.run_state(&circuit).unwrap();
+    assert!((state.entanglement_entropy(0).unwrap() - 1.0).abs() < 1e-12);
+    assert!((state.purity(0).unwrap() - 0.5).abs() < 1e-12);
+
+    let mut separable = Circuit::new(2);
+    separable.h(0);
+    let product = sim.run_state(&separable).unwrap();
+    assert!(product.entanglement_entropy(0).unwrap().abs() < 1e-12);
+    assert!((product.purity(0).unwrap() - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration11_grover_success_curve_starts_flat() {
+    let oracle = GroverOracle::marked(0b11);
+    let curve = grover_success_curve(2, &oracle, 2).unwrap();
+    assert_eq!(curve.len(), 3);
+    assert!((curve[0] - 0.25).abs() < 1e-12);
+    assert!(curve[1] >= curve[0]);
+}
+
+#[test]
+fn iteration11_qft_roundtrip_preserves_state() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).cnot(0, 1).s(2);
+    let state = sim.run_state(&circuit).unwrap();
+    let fidelity = qft_roundtrip_fidelity(&[0, 1, 2], 3, &state).unwrap();
+    assert!((fidelity - 1.0).abs() < 1e-10);
+}
+
+#[test]
+fn iteration11_entropy_stability_is_nonnegative() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).cnot(0, 1);
+    let result = sim.run(&circuit, 1024).unwrap();
+    assert!(result.entropy_stability() >= 0.0);
+}

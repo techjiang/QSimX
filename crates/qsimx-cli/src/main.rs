@@ -1,8 +1,8 @@
 use std::env;
 
 use qsimx::prelude::{
-    Circuit, GroverOracle, StateVectorSimulator, grover_search, qft,
-    recommended_grover_iterations,
+    Circuit, GroverOracle, StateVectorSimulator, grover_search, grover_success_curve, qft,
+    qft_roundtrip_fidelity, recommended_grover_iterations,
 };
 
 fn main() {
@@ -49,6 +49,9 @@ fn main() {
             run_qft_m2(qubits);
         }
         "verify-m2" => run_verify_m2(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3)),
+        "verify-m2-plus" => {
+            run_verify_m2_plus(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
+        }
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
             let mut circuit = Circuit::new(3);
@@ -328,8 +331,60 @@ fn run_verify_m2(qubits: usize) {
     println!("grover gates: {}", g.circuit.gates().len());
     println!("grover marked probability: {:.6}", g.marked_probability);
     println!("qft gates: {}", q.circuit.gates().len());
-    println!("w significant amplitudes: {}", ws.significant_basis_count(1e-12));
+    println!(
+        "w significant amplitudes: {}",
+        ws.significant_basis_count(1e-12)
+    );
     println!("qft normalized: {}", q.state.is_normalized());
+}
+
+fn run_verify_m2_plus(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: qubits must be at least 1");
+        return;
+    }
+    let targets: Vec<usize> = (0..qubits).collect();
+    let marked = (1usize << qubits) - 1;
+    let iterations = recommended_grover_iterations(qubits);
+    let oracle = GroverOracle::marked(marked);
+
+    let mut circuit = Circuit::new(qubits);
+    circuit.h(0);
+    for target in 1..qubits {
+        circuit.cnot(0, target);
+    }
+    let state = match StateVectorSimulator::new().run_state(&circuit) {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let curve = match grover_success_curve(qubits, &oracle, iterations) {
+        Ok(curve) => curve,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let fidelity = match qft_roundtrip_fidelity(&targets, qubits, &state) {
+        Ok(fidelity) => fidelity,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+
+    println!("qubits: {qubits}");
+    println!("qft roundtrip fidelity: {fidelity:.6}");
+    println!(
+        "entanglement entropy q0: {:.6}",
+        state.entanglement_entropy(0).unwrap()
+    );
+    println!("purity q0: {:.6}", state.purity(0).unwrap());
+    for (iteration, probability) in curve.iter().enumerate() {
+        println!("grover iteration {iteration}: {probability:.6}");
+    }
 }
 
 fn run(circuit: &Circuit, shots: usize) {
@@ -364,6 +419,6 @@ fn run(circuit: &Circuit, shots: usize) {
 
 fn print_usage() {
     println!(
-        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli version\n"
+        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli version\n"
     );
 }

@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use crate::circuit::{Circuit, SimulatorError, StateVectorSimulator};
+use crate::circuit::{Circuit, SimulatorError, StateVectorSimulator, apply_gate};
 use crate::state::StateVector;
 
 #[derive(Clone, Debug)]
@@ -48,6 +48,34 @@ fn build_qft(targets: &[usize], qubits: usize, inverse: bool) -> Result<QftResul
         .run_state(&circuit)
         .map_err(QftError::Simulator)?;
     Ok(QftResult { circuit, state })
+}
+
+/// Fidelity between the QFT output and the inverse-QFT output of a state.
+pub fn qft_roundtrip_fidelity(
+    targets: &[usize],
+    qubits: usize,
+    input: &StateVector,
+) -> Result<f64, QftRoundTripError> {
+    let forward = qft(targets, qubits)?;
+    let mut state = input.clone();
+    for gate in forward.circuit.gates() {
+        apply_gate(gate, &mut state)?;
+    }
+    let inverse = inverse_qft(targets, qubits)?;
+    for gate in inverse.circuit.gates() {
+        apply_gate(gate, &mut state)?;
+    }
+    Ok(state.fidelity(input)?)
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum QftRoundTripError {
+    #[error(transparent)]
+    Qft(#[from] QftError),
+    #[error(transparent)]
+    Simulator(#[from] SimulatorError),
+    #[error(transparent)]
+    State(#[from] crate::state::StateVectorError),
 }
 
 #[derive(Debug, thiserror::Error)]

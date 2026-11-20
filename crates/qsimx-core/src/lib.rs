@@ -7,7 +7,9 @@ pub mod state;
 pub mod prelude {
     pub use crate::VERSION;
     pub use crate::algorithm::{
-        GroverOracle, GroverResult, QftResult, grover_search, inverse_qft, qft,
+        GroverOracle, GroverResult, QftResult, QftRoundTripError, grover_iterations, grover_search,
+        grover_success_curve, inverse_qft, qft, qft_roundtrip_fidelity,
+        recommended_grover_iterations,
     };
     pub use crate::circuit::{
         Circuit, QasmError, SimulationResult, SimulatorError, StateVectorSimulator, apply_gate,
@@ -15,7 +17,6 @@ pub mod prelude {
     pub use crate::gate::Gate;
     pub use crate::measure::{computational_probability, expectation};
     pub use crate::state::{Basis, Complex, StateVector, StateVectorError};
-pub use crate::algorithm::{grover_iterations, recommended_grover_iterations};
 }
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

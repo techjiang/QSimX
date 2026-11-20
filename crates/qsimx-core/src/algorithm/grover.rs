@@ -25,7 +25,6 @@ pub struct GroverResult {
     pub iterations: usize,
 }
 
-
 /// Recommended Grover iteration count for a single marked state.
 ///
 /// Clamped to `sqrt(N)` so small search spaces do not overshoot.
@@ -44,7 +43,22 @@ pub fn grover_iterations(qubits: usize, solutions: usize) -> usize {
     }
     let space = 1usize << qubits;
     let ratio = (space / solutions.max(1)).max(1) as f64;
-    ((std::f64::consts::PI / 4.0) * ratio.sqrt()).floor().max(1.0) as usize
+    ((std::f64::consts::PI / 4.0) * ratio.sqrt())
+        .floor()
+        .max(1.0) as usize
+}
+
+/// Grover success probability after each iteration, starting from 0 iterations.
+pub fn grover_success_curve(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> Result<Vec<f64>, GroverError> {
+    (0..=max_iterations)
+        .map(|iterations| {
+            grover_search(qubits, oracle, iterations).map(|result| result.marked_probability)
+        })
+        .collect()
 }
 
 pub fn grover_search(
