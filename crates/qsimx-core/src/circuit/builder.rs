@@ -37,19 +37,49 @@ impl Circuit {
     }
 
     pub fn push(&mut self, gate: Gate) -> &mut Self {
-        let gate_depth = gate
-            .qubits()
+        let gate_qubits = gate.qubits();
+        let gate_depth = gate_qubits
             .iter()
             .filter_map(|&q| self.layers.get(q).copied())
             .max()
             .unwrap_or(0)
             + 1;
-        for q in gate.qubits() {
+        for q in gate_qubits {
             if q < self.layers.len() {
                 self.layers[q] = gate_depth;
             }
         }
         self.gates.push(gate);
+        self
+    }
+
+    /// Qubits that have appeared in at least one gate so far, in index order.
+    pub fn distinct_touching_qubits(&self) -> Vec<usize> {
+        let mut seen = vec![false; self.qubits];
+        for gate in &self.gates {
+            for qubit in gate.qubits() {
+                if qubit < seen.len() {
+                    seen[qubit] = true;
+                }
+            }
+        }
+        seen.iter()
+            .enumerate()
+            .filter_map(|(q, &used)| used.then_some(q))
+            .collect()
+    }
+
+    /// Append a gate after every currently active qubit has been touched.
+    pub fn add_layered(&mut self, gate: Gate) -> &mut Self {
+        let target_layer = self
+            .distinct_touching_qubits()
+            .into_iter()
+            .max()
+            .map_or(1, |q| self.layers.get(q).copied().unwrap_or(0) + 1);
+        self.push(gate);
+        if let Some(layer) = self.layers.get_mut(0) {
+            *layer = (*layer).max(target_layer);
+        }
         self
     }
 

@@ -114,6 +114,31 @@ impl SimulationResult {
         variance.sqrt()
     }
 
+    /// Render an ASCII histogram, scaled to the most frequent outcome.
+    pub fn histogram_text(&self, width: usize, bar_width: usize) -> String {
+        let counts = self.sorted_counts();
+        let max = counts
+            .iter()
+            .map(|(_, count)| *count)
+            .max()
+            .unwrap_or(1)
+            .max(1);
+        counts
+            .iter()
+            .map(|(state, count)| {
+                let filled = if bar_width == 0 {
+                    0
+                } else {
+                    (*count * bar_width) / max
+                };
+                let bar: String = std::iter::repeat('#').take(filled).collect();
+                let state_text = format!("{state:0state_width$b}", state_width = width);
+                format!("  {state_text} | {bar:<bar_width$} {count}")
+            })
+            .collect::<Vec<_>>()
+            .join("\n")
+    }
+
     /// Render the measurement histogram as compact JSON.
     pub fn histogram_json(&self, width: usize) -> String {
         let entries: Vec<String> = self

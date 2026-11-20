@@ -61,6 +61,14 @@ pub fn grover_success_curve(
         .collect()
 }
 
+/// Amplification gain over the uniform prior for a single marked state.
+pub fn grover_amplification_gain(qubits: usize, probability: f64) -> f64 {
+    if qubits == 0 {
+        return 1.0;
+    }
+    probability * (1usize << qubits) as f64
+}
+
 pub fn grover_search(
     qubits: usize,
     oracle: &GroverOracle,

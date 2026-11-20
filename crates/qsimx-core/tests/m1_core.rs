@@ -371,3 +371,44 @@ fn iteration12_qft_sparsity_counts_modes() {
     let result = qft(&[0, 1, 2], 3).unwrap();
     assert_eq!(qft_sparsity(&result, 1e-12), 8);
 }
+
+#[test]
+fn iteration13_probability_span_is_bounded() {
+    let zero = StateVector::zero(2).unwrap();
+    assert!((zero.probability_span() - 1.0).abs() < 1e-12);
+
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).cnot(0, 1);
+    let bell = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((bell.probability_span() - 0.5).abs() < 1e-12);
+}
+
+#[test]
+fn iteration13_histogram_text_is_scaled() {
+    let mut circuit = Circuit::new(1);
+    circuit.x(0);
+    let result = StateVectorSimulator::new().run(&circuit, 8).unwrap();
+    let text = result.histogram_text(1, 4);
+    assert!(text.contains("1 | #### 8"), "histogram was: {text}");
+    let empty_bar = result.histogram_text(1, 0);
+    assert!(
+        empty_bar.contains("1 |  8"),
+        "empty histogram was: {empty_bar}"
+    );
+}
+
+#[test]
+fn iteration13_layered_circuit_tracks_active_qubits() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).add_layered(Gate::X(2));
+    assert_eq!(circuit.distinct_touching_qubits(), vec![0, 2]);
+    assert_eq!(circuit.depth(), 2);
+}
+
+#[test]
+fn iteration13_qft_density_and_grover_gain() {
+    let qft = qft(&[0, 1, 2], 3).unwrap();
+    assert!((qft_gate_density(&qft) - 7.0 / 3.0).abs() < 1e-12);
+    assert!((grover_amplification_gain(2, 0.25) - 1.0).abs() < 1e-12);
+    assert!((grover_amplification_gain(3, 0.5) - 4.0).abs() < 1e-12);
+}

@@ -278,6 +278,22 @@ impl StateVector {
             / 2.0)
     }
 
+    /// Difference between the largest and smallest basis-state probability.
+    pub fn probability_span(&self) -> f64 {
+        let mut min = f64::INFINITY;
+        let mut max = 0.0_f64;
+        for amplitude in &self.amplitudes {
+            let probability = amplitude.norm_sqr();
+            min = min.min(probability);
+            max = max.max(probability);
+        }
+        if self.amplitudes.is_empty() {
+            0.0
+        } else {
+            max - min
+        }
+    }
+
     /// Cumulative probability distribution indexed by basis state.
     pub fn cumulative_probabilities(&self) -> Vec<f64> {
         let mut cumulative = 0.0;

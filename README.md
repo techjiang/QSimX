@@ -170,3 +170,19 @@ cargo run -p qsimx-cli -- verify-m2-final 3
 ```
 
 真实执行：`cargo test --workspace` 30/30 通过；`verify-m2-final 3` 输出 TVD 0.500000、GHZ 最大振幅概率 0.500000、QFT 显著模式 8、往返保真度 1.000000、Grover 迭代 2 次且标记态概率 0.500000。
+
+
+## 第十三轮迭代
+
+1. 新增 `StateVector::probability_span()`，报告基态概率极差。
+2. 新增 `SimulationResult::histogram_text()`，把测量直方图渲染为可复用文本。
+3. 新增 `Circuit::distinct_touching_qubits()` 与 `Circuit::add_layered()`，支持按活跃量子比特补层。
+4. 新增 `qft_gate_density()` 与 `grover_amplification_gain()`，补齐 M2 的小型分析指标。
+5. CLI 新增 `verify-m2-compact`，集中输出本轮指标与文本直方图，并补充 4 项回归测试。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -p qsimx-cli -- verify-m2-compact 3
+```

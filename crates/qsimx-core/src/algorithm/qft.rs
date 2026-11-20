@@ -60,6 +60,12 @@ pub fn qft_sparsity(result: &QftResult, threshold: f64) -> usize {
         .count()
 }
 
+/// Gate density: average number of gates per QFT target.
+pub fn qft_gate_density(result: &QftResult) -> f64 {
+    let targets = result.circuit.qubits().max(1);
+    result.circuit.gates().len() as f64 / targets as f64
+}
+
 /// Fidelity between the QFT output and the inverse-QFT output of a state.
 pub fn qft_roundtrip_fidelity(
     targets: &[usize],
