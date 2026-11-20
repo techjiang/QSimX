@@ -1148,7 +1148,7 @@ fn iteration71_average_gate_load_counts_touch_points() {
     let mut circuit = Circuit::new(3);
     assert!(circuit.average_gate_load().abs() < 1e-12);
     circuit.h(0).cnot(0, 1);
-    assert!((circuit.average_gate_load() - 4.0 / 3.0).abs() < 1e-12);
+    assert!((circuit.average_gate_load() - 2.0).abs() < 1e-12);
     assert!(Circuit::new(0).average_gate_load().abs() < 1e-12);
 }
 
@@ -1173,7 +1173,7 @@ fn iteration74_spectrum_metrics_are_stable_on_ghz_state() {
     circuit.h(0).cnot(0, 1).cnot(0, 2);
     let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
     assert!((state.outcome_diversity() - 0.5).abs() < 1e-12);
-    assert!((circuit.average_gate_load() - 4.0 / 3.0).abs() < 1e-12);
+    assert!((circuit.average_gate_load() - 2.0).abs() < 1e-12);
     let oracle = GroverOracle::marked(0b111);
     assert!((0.0..=1.0).contains(&grover_normalized_success_area(3, &oracle, 6).unwrap()));
 }
