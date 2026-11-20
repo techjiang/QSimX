@@ -246,3 +246,18 @@ cargo run -q -p qsimx-cli -- verify-m2-dist 3
 cargo test --workspace
 cargo run -q -p qsimx-cli -- verify-m2-balance 3
 ```
+
+## 第十八轮迭代
+
+1. 新增 `StateVector::odd_parity_probability()` 与 `max_probability_step()`，补齐概率分布奇偶与跳变分析。
+2. 新增 `Circuit::active_qubit_count()`，确认活跃量子线数量。
+3. 新增 `grover_recommended_gain()`，量化推荐迭代次数带来的成功率提升。
+4. 新增 `qft_density_balance()`，衡量 QFT 与逆 QFT 的平均门密度。
+5. CLI 新增 `verify-m2-parity [qubits]`，并补充 4 项回归测试。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-parity 3
+```

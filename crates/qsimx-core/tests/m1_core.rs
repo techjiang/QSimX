@@ -570,3 +570,45 @@ fn iteration17_min_gates_per_touched_qubit_ignores_idle_wires() {
     assert_eq!(circuit.min_gates_per_touched_qubit(), 3);
     assert_eq!(Circuit::new(3).min_gates_per_touched_qubit(), 0);
 }
+
+#[test]
+fn iteration18_parity_and_circuit_analysis_helpers_work() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(2);
+    circuit.x(0);
+    let state = sim.run_state(&circuit).unwrap();
+
+    assert!((state.odd_parity_probability() - 1.0).abs() < 1e-12);
+    assert!(state.even_parity_probability().abs() < 1e-12);
+    assert!((state.max_probability_step() - 1.0).abs() < 1e-12);
+    assert_eq!(circuit.active_qubit_count(), 1);
+    assert_eq!(circuit.min_gates_per_touched_qubit(), 1);
+}
+
+#[test]
+fn iteration18_grover_gain_is_nonnegative() {
+    let oracle = GroverOracle::marked(0b11);
+    let gain = grover_recommended_gain(2, &oracle).unwrap();
+    assert!(gain >= -1e-12);
+    assert!(gain <= 1.0 + 1e-12);
+}
+
+#[test]
+fn iteration18_qft_density_balance_matches_average() {
+    let targets = vec![0usize, 1, 2];
+    let forward = qft(&targets, 3).unwrap();
+    let inverse = inverse_qft(&targets, 3).unwrap();
+    let expected = (qft_gate_density(&forward) + qft_gate_density(&inverse)) / 2.0;
+    assert!((qft_density_balance(&forward, &inverse) - expected).abs() < 1e-12);
+}
+
+#[test]
+fn iteration18_parity_cli_metrics_are_stable() {
+    let oracle = GroverOracle::marked(0b11);
+    let grover = grover_search(2, &oracle, recommended_grover_iterations(2)).unwrap();
+    let odd = grover.state.odd_parity_probability();
+    let even = grover.state.even_parity_probability();
+    assert!((odd + even - 1.0).abs() < 1e-12);
+    assert!((odd - 0.5).abs() < 1e-12);
+    assert!((even - 0.5).abs() < 1e-12);
+}

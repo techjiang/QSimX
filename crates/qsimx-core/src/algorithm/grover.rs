@@ -89,6 +89,14 @@ pub fn grover_success_cumulative(
         .collect())
 }
 
+/// Probability gain from the first Grover iteration to the recommended count.
+pub fn grover_recommended_gain(qubits: usize, oracle: &GroverOracle) -> Result<f64, GroverError> {
+    let initial = grover_search(qubits, oracle, 0)?.marked_probability;
+    let final_probability =
+        grover_search(qubits, oracle, recommended_grover_iterations(qubits))?.marked_probability;
+    Ok(final_probability - initial)
+}
+
 pub fn grover_search(
     qubits: usize,
     oracle: &GroverOracle,

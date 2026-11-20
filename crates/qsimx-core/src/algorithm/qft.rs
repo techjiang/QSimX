@@ -94,6 +94,11 @@ pub fn qft_gate_balance(result: &QftResult, inverse: &QftResult) -> f64 {
     1.0 - (forward.abs_diff(backward) as f64 / largest as f64)
 }
 
+/// Average gate density across the QFT and inverse-QFT circuits.
+pub fn qft_density_balance(result: &QftResult, inverse: &QftResult) -> f64 {
+    (qft_gate_density(result) + qft_gate_density(inverse)) / 2.0
+}
+
 /// Fidelity between the QFT output and the inverse-QFT output of a state.
 pub fn qft_roundtrip_fidelity(
     targets: &[usize],

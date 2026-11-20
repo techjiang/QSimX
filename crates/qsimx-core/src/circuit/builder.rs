@@ -228,6 +228,11 @@ impl Circuit {
             .unwrap_or(0)
     }
 
+    /// Number of qubits touched by at least one gate.
+    pub fn active_qubit_count(&self) -> usize {
+        self.distinct_touching_qubits().len()
+    }
+
     pub fn max_gates_per_qubit(&self) -> usize {
         let mut counts = vec![0usize; self.qubits];
         for gate in &self.gates {

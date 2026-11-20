@@ -392,6 +392,25 @@ impl StateVector {
         Ok(divergence)
     }
 
+    /// Probability mass on basis states whose popcount is odd.
+    pub fn odd_parity_probability(&self) -> f64 {
+        let mut total = 0.0;
+        for (index, amplitude) in self.amplitudes.iter().enumerate() {
+            if index.count_ones() % 2 == 1 {
+                total += amplitude.norm_sqr();
+            }
+        }
+        total
+    }
+
+    /// Largest absolute difference between consecutive basis-state probabilities.
+    pub fn max_probability_step(&self) -> f64 {
+        self.amplitudes
+            .windows(2)
+            .map(|pair| (pair[0].norm_sqr() - pair[1].norm_sqr()).abs())
+            .fold(0.0_f64, f64::max)
+    }
+
     pub fn cumulative_probabilities(&self) -> Vec<f64> {
         let mut cumulative = 0.0;
         self.amplitudes
