@@ -702,3 +702,59 @@ fn iteration22_verify_metrics_reject_mismatched_qft_states() {
     assert!(imbalance > 0.0);
     assert!(qft_probability_imbalance(&forward, &inverse) < 1e-12);
 }
+
+#[test]
+fn iteration23_information_metrics_match_basis_and_uniform_states() {
+    let basis = StateVector::zero(2).unwrap();
+    assert!(basis.shannon_entropy().abs() < 1e-12);
+    assert!((basis.inverse_max_probability() - 1.0).abs() < 1e-12);
+
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).h(1);
+    let uniform = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((uniform.shannon_entropy() - 2.0).abs() < 1e-12);
+    assert!((uniform.inverse_max_probability() - 4.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration24_multi_qubit_ratio_counts_entangling_gates() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).h(0).cnot(0, 1).toffoli(0, 1, 2);
+    assert_eq!(circuit.multi_qubit_gate_count(), 2);
+    assert!((circuit.multi_qubit_gate_ratio() - 0.5).abs() < 1e-12);
+    assert_eq!(Circuit::new(2).multi_qubit_gate_ratio(), 0.0);
+}
+
+#[test]
+fn iteration25_grover_first_success_and_peak_step_are_stable() {
+    let oracle = GroverOracle::marked(0b11);
+    assert_eq!(
+        grover_first_success_iteration(2, &oracle, 4, 0.9).unwrap(),
+        Some(2)
+    );
+    assert_eq!(
+        grover_first_success_iteration(2, &oracle, 0, 0.99).unwrap(),
+        None
+    );
+    let step = grover_peak_step(2, &oracle, 4).unwrap();
+    assert!(step > 0.0 && step <= 1.0 + 1e-12);
+}
+
+#[test]
+fn iteration26_next_verify_metrics_match_known_ghz_state() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).cnot(0, 1).cnot(0, 2);
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+
+    assert!((state.shannon_entropy() - 1.0).abs() < 1e-12);
+    assert!((state.collision_probability() - 0.5).abs() < 1e-12);
+    assert!((state.inverse_max_probability() - 2.0).abs() < 1e-12);
+    assert_eq!(circuit.multi_qubit_gate_count(), 2);
+}
+
+#[test]
+fn iteration27_inverse_max_probability_rejects_zero_state_vector() {
+    let state = StateVector::zero(1).unwrap();
+    assert!((state.inverse_max_probability() - 1.0).abs() < 1e-12);
+    assert!(grover_peak_step(0, &GroverOracle::marked(0), 1).is_err());
+}

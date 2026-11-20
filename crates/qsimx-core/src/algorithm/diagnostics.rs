@@ -66,3 +66,31 @@ pub fn qft_pair_is_reversible(
         .map(|fidelity| fidelity > 1.0 - 1e-9)
         .unwrap_or(false)
 }
+
+/// Smallest Grover iteration whose marked-state probability is at least `target`.
+pub fn grover_first_success_iteration(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+    target: f64,
+) -> GroverAnalysisResult<Option<usize>> {
+    for iteration in 0..=max_iterations {
+        if grover_search(qubits, oracle, iteration)?.marked_probability >= target {
+            return Ok(Some(iteration));
+        }
+    }
+    Ok(None)
+}
+
+/// Largest absolute probability change between adjacent Grover iterations.
+pub fn grover_peak_step(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> GroverAnalysisResult<f64> {
+    let curve = crate::algorithm::grover_success_curve(qubits, oracle, max_iterations)?;
+    Ok(curve
+        .windows(2)
+        .map(|pair| (pair[1] - pair[0]).abs())
+        .fold(0.0_f64, f64::max))
+}

@@ -429,6 +429,30 @@ impl StateVector {
         }
     }
 
+    /// Shannon entropy of the ideal measurement distribution, in bits.
+    pub fn shannon_entropy(&self) -> f64 {
+        self.amplitudes
+            .iter()
+            .map(|amplitude| amplitude.norm_sqr())
+            .filter(|probability| *probability > f64::EPSILON)
+            .map(|probability| -probability * probability.log2())
+            .sum()
+    }
+
+    /// Effective dimension from the largest basis-state probability.
+    pub fn inverse_max_probability(&self) -> f64 {
+        let largest = self
+            .amplitudes
+            .iter()
+            .map(|amplitude| amplitude.norm_sqr())
+            .fold(0.0_f64, f64::max);
+        if largest <= f64::EPSILON {
+            0.0
+        } else {
+            1.0 / largest
+        }
+    }
+
     pub fn cumulative_probabilities(&self) -> Vec<f64> {
         let mut cumulative = 0.0;
         self.amplitudes

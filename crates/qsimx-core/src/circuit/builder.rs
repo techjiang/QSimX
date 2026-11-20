@@ -249,6 +249,22 @@ impl Circuit {
             .count()
     }
 
+    /// Number of gates acting on more than one qubit.
+    pub fn multi_qubit_gate_count(&self) -> usize {
+        self.gates
+            .iter()
+            .filter(|gate| gate.qubits().len() > 1)
+            .count()
+    }
+
+    /// Ratio of entangling gates to all gates; zero for an empty circuit.
+    pub fn multi_qubit_gate_ratio(&self) -> f64 {
+        if self.gates.is_empty() {
+            return 0.0;
+        }
+        self.multi_qubit_gate_count() as f64 / self.gates.len() as f64
+    }
+
     pub fn max_gates_per_qubit(&self) -> usize {
         let mut counts = vec![0usize; self.qubits];
         for gate in &self.gates {

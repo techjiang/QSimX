@@ -3,7 +3,8 @@ mod grover;
 mod qft;
 
 pub use diagnostics::{
-    grover_peak_delta, grover_peak_iteration, qft_pair_is_reversible, qft_probability_imbalance,
+    grover_first_success_iteration, grover_peak_delta, grover_peak_iteration, grover_peak_step,
+    qft_pair_is_reversible, qft_probability_imbalance,
 };
 pub use grover::{
     GroverAnalysisResult, GroverError, GroverOracle, GroverResult, grover_amplification_gain,

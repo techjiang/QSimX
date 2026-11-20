@@ -277,3 +277,20 @@ cargo run -q -p qsimx-cli -- verify-m2-parity 3
 cargo test --workspace
 cargo run -q -p qsimx-cli -- verify-m2-diagnostics 3
 ```
+
+## 第二十轮迭代（本轮 5 次更新）
+
+1. `StateVector::shannon_entropy()`：从理想测量分布直接计算香农熵。
+2. `StateVector::inverse_max_probability()`：用最大基态概率反映有效分支数。
+3. `Circuit::multi_qubit_gate_count()` 与 `multi_qubit_gate_ratio()`：统计多量子比特门占比。
+4. `grover_first_success_iteration()` 与 `grover_peak_step()`：定位首次达标迭代和最大概率跳变。
+5. CLI 新增 `verify-m2-next`，汇总 Grover、QFT、GHZ 与电路指标；补充 5 项回归测试。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-next 3
+```
+
+本机使用 Rust 1.100 与 C 工具链真实执行；`cargo test --workspace` 67/67 通过。截图见 `qsimx_iter20_next.png`。
