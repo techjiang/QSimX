@@ -19,7 +19,7 @@ pub use grover::{
 pub use qft::{
     QftResult, QftRoundTripError, inverse_qft, qft, qft_adjacent_phase_gap,
     qft_adjacent_phase_step, qft_average_probability, qft_density_balance, qft_density_gap,
-    qft_gate_balance, qft_gate_density, qft_gate_fidelity, qft_gate_symmetry, qft_phase_balance,
+    qft_gate_balance, qft_gate_density, qft_gate_fidelity, qft_gate_symmetry, qft_phase_balance, qft_phase_pair_coherence,
     qft_phase_circular_kurtosis, qft_phase_circular_skewness, qft_phase_circular_variance,
     qft_phase_resultant_length, qft_roundtrip_fidelity, qft_sparsity,
 };

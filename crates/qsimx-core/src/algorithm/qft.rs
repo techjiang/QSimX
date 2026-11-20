@@ -325,3 +325,27 @@ pub fn qft_phase_resultant_length(result: &QftResult) -> f64 {
         .hypot(sin_sum / count as f64)
         .clamp(0.0, 1.0)
 }
+
+/// Magnitude of the mean unit phasor across non-uniform Fourier modes.
+pub fn qft_phase_pair_coherence(result: &QftResult) -> f64 {
+    let phases = result
+        .state
+        .amplitudes()
+        .iter()
+        .enumerate()
+        .filter(|(index, _)| *index != 0)
+        .map(|(_, amplitude)| amplitude.arg());
+    let mut re = 0.0;
+    let mut im = 0.0;
+    let mut count = 0usize;
+    for phase in phases {
+        re += phase.cos();
+        im += phase.sin();
+        count += 1;
+    }
+    if count == 0 {
+        0.0
+    } else {
+        ((re / count as f64).powi(2) + (im / count as f64).powi(2)).sqrt()
+    }
+}
