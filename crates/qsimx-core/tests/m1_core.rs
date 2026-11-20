@@ -758,3 +758,14 @@ fn iteration27_inverse_max_probability_rejects_zero_state_vector() {
     assert!((state.inverse_max_probability() - 1.0).abs() < 1e-12);
     assert!(grover_peak_step(0, &GroverOracle::marked(0), 1).is_err());
 }
+
+#[test]
+fn iteration28_entropy_per_qubit_normalizes_distributions() {
+    let basis = StateVector::zero(2).unwrap();
+    assert!(basis.entropy_per_qubit().abs() < 1e-12);
+
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).h(1);
+    let uniform = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((uniform.entropy_per_qubit() - 1.0).abs() < 1e-12);
+}

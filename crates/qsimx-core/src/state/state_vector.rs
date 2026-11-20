@@ -439,6 +439,12 @@ impl StateVector {
             .sum()
     }
 
+    /// Shannon entropy per active qubit, normalized to `[0, 1]`.
+    pub fn entropy_per_qubit(&self) -> f64 {
+        let qubits = self.qubits.max(1) as f64;
+        (self.shannon_entropy() / qubits).min(1.0)
+    }
+
     /// Effective dimension from the largest basis-state probability.
     pub fn inverse_max_probability(&self) -> f64 {
         let largest = self
