@@ -1,8 +1,8 @@
 use std::env;
 
 use qsimx::prelude::{
-    Circuit, GroverOracle, StateVectorSimulator, grover_search, grover_success_curve, qft,
-    qft_roundtrip_fidelity, recommended_grover_iterations,
+    Circuit, GroverOracle, StateVector, StateVectorSimulator, grover_search, grover_success_curve, qft,
+    qft_roundtrip_fidelity, qft_sparsity, recommended_grover_iterations,
 };
 
 fn main() {
@@ -51,6 +51,9 @@ fn main() {
         "verify-m2" => run_verify_m2(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3)),
         "verify-m2-plus" => {
             run_verify_m2_plus(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
+        }
+        "verify-m2-final" => {
+            run_verify_m2_final(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
         }
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
@@ -387,6 +390,74 @@ fn run_verify_m2_plus(qubits: usize) {
     }
 }
 
+fn run_verify_m2_final(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: qubits must be at least 1");
+        return;
+    }
+    let targets: Vec<usize> = (0..qubits).collect();
+    let marked = (1usize << qubits) - 1;
+    let iterations = recommended_grover_iterations(qubits);
+    let oracle = GroverOracle::marked(marked);
+
+    let mut ghz = Circuit::new(qubits);
+    ghz.h(0);
+    for target in 1..qubits {
+        ghz.cnot(0, target);
+    }
+    let ghz_state = match StateVectorSimulator::new().run_state(&ghz) {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let zero = match StateVector::zero(qubits) {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let qft = match qft(&targets, qubits) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let grover = match grover_search(qubits, &oracle, iterations) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let curve = match grover_success_curve(qubits, &oracle, iterations) {
+        Ok(curve) => curve,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let fidelity = match qft_roundtrip_fidelity(&targets, qubits, &zero) {
+        Ok(fidelity) => fidelity,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+
+    println!("qubits: {qubits}");
+    println!("tvd(|0>, GHZ): {:.6}", zero.total_variation_distance(&ghz_state).unwrap());
+    println!("ghz max amplitude probability: {:.6}", Circuit::state_purity(&ghz, &ghz_state));
+    println!("qft significant modes: {}", qft_sparsity(&qft, 1e-12));
+    println!("qft roundtrip fidelity: {fidelity:.6}");
+    println!("grover iterations: {}", grover.iterations);
+    println!("grover marked probability: {:.6}", grover.marked_probability);
+    println!("grover peak probability: {:.6}", curve.iter().copied().fold(0.0_f64, f64::max));
+}
+
 fn run(circuit: &Circuit, shots: usize) {
     match StateVectorSimulator::new().run(circuit, shots) {
         Ok(result) => {
@@ -419,6 +490,6 @@ fn run(circuit: &Circuit, shots: usize) {
 
 fn print_usage() {
     println!(
-        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli version\n"
+        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli version\n"
     );
 }

@@ -50,6 +50,16 @@ fn build_qft(targets: &[usize], qubits: usize, inverse: bool) -> Result<QftResul
     Ok(QftResult { circuit, state })
 }
 
+/// Effective number of Fourier modes above a probability threshold.
+pub fn qft_sparsity(result: &QftResult, threshold: f64) -> usize {
+    result
+        .state
+        .amplitudes()
+        .iter()
+        .filter(|amplitude| amplitude.norm_sqr() > threshold)
+        .count()
+}
+
 /// Fidelity between the QFT output and the inverse-QFT output of a state.
 pub fn qft_roundtrip_fidelity(
     targets: &[usize],

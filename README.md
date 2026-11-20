@@ -153,3 +153,20 @@ cargo run -p qsimx-cli -- verify-m2 3
 cargo test --workspace
 cargo run -p qsimx-cli -- verify-m2-plus 3
 ```
+
+## 第十二轮迭代
+
+1. 新增 `StateVector::total_variation_distance()`，计算两个量子态测量分布的总变差距离。
+2. 新增 `Circuit::state_purity()`，报告量子态最大振幅概率作为纯度快照。
+3. 新增 `qft_sparsity()`，统计 QFT 输出中超过阈值的显著模式数。
+4. CLI 新增 `verify-m2-final`，集中输出 TVD、纯度、QFT 模式数、往返保真度与 Grover 成功率。
+5. 补充 3 项回归测试，覆盖新 API 的边界与数值行为。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -p qsimx-cli -- verify-m2-final 3
+```
+
+真实执行：`cargo test --workspace` 30/30 通过；`verify-m2-final 3` 输出 TVD 0.500000、GHZ 最大振幅概率 0.500000、QFT 显著模式 8、往返保真度 1.000000、Grover 迭代 2 次且标记态概率 0.500000。

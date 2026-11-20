@@ -261,6 +261,23 @@ impl StateVector {
         Ok(rho[0][0].norm_sqr() + 2.0 * rho[0][1].norm_sqr() + rho[1][1].norm_sqr())
     }
 
+    /// Total variation distance between two probability distributions.
+    pub fn total_variation_distance(&self, other: &StateVector) -> Result<f64, StateVectorError> {
+        if self.qubits != other.qubits {
+            return Err(StateVectorError::WrongLength {
+                expected: self.amplitudes.len(),
+                actual: other.amplitudes.len(),
+            });
+        }
+        Ok(self
+            .amplitudes
+            .iter()
+            .zip(&other.amplitudes)
+            .map(|(&a, &b)| (a.norm_sqr() - b.norm_sqr()).abs())
+            .sum::<f64>()
+            / 2.0)
+    }
+
     /// Cumulative probability distribution indexed by basis state.
     pub fn cumulative_probabilities(&self) -> Vec<f64> {
         let mut cumulative = 0.0;

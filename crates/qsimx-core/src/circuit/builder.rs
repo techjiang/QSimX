@@ -146,6 +146,15 @@ impl Circuit {
         (self.qubits, self.gates.len(), self.depth())
     }
 
+    /// Dominant amplitude probability of a quantum state (max |amplitude|^2).
+    pub fn state_purity(&self, state: &crate::state::StateVector) -> f64 {
+        let mut max_probability = 0.0_f64;
+        for amplitude in state.amplitudes() {
+            max_probability = max_probability.max(amplitude.norm_sqr());
+        }
+        max_probability
+    }
+
     /// Build a Bell state on two qubits.
     pub fn bell_pair(&mut self, a: usize, b: usize) -> &mut Self {
         self.h(a).cnot(a, b)

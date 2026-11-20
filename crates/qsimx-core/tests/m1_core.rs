@@ -346,3 +346,28 @@ fn iteration11_entropy_stability_is_nonnegative() {
     let result = sim.run(&circuit, 1024).unwrap();
     assert!(result.entropy_stability() >= 0.0);
 }
+
+#[test]
+fn iteration12_total_variation_distance_bounds() {
+    let zero = StateVector::zero(2).unwrap();
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).cnot(0, 1);
+    let bell = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    let distance = zero.total_variation_distance(&bell).unwrap();
+    assert!((distance - 0.5).abs() < 1e-12);
+    assert_eq!(zero.total_variation_distance(&zero).unwrap(), 0.0);
+}
+
+#[test]
+fn iteration12_state_purity_reports_max_probability() {
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).cnot(0, 1);
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((Circuit::state_purity(&circuit, &state) - 0.5).abs() < 1e-12);
+}
+
+#[test]
+fn iteration12_qft_sparsity_counts_modes() {
+    let result = qft(&[0, 1, 2], 3).unwrap();
+    assert_eq!(qft_sparsity(&result, 1e-12), 8);
+}

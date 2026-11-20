@@ -8,7 +8,7 @@ pub mod prelude {
     pub use crate::VERSION;
     pub use crate::algorithm::{
         GroverOracle, GroverResult, QftResult, QftRoundTripError, grover_iterations, grover_search,
-        grover_success_curve, inverse_qft, qft, qft_roundtrip_fidelity,
+        grover_success_curve, inverse_qft, qft, qft_roundtrip_fidelity, qft_sparsity,
         recommended_grover_iterations,
     };
     pub use crate::circuit::{
