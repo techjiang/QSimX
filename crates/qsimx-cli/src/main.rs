@@ -31,6 +31,7 @@ fn main() {
             run_inspect(qubits);
         }
         "summary9" => run_summary9(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(2)),
+        "analyze" => run_analyze(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(2)),
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
             let mut circuit = Circuit::new(3);
@@ -188,6 +189,31 @@ fn run_summary9(qubits: usize) {
     }
 }
 
+fn run_analyze(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: analyze needs at least 1 qubit");
+        return;
+    }
+    let mut circuit = Circuit::new(qubits);
+    circuit.h(0);
+    for target in 1..qubits {
+        circuit.cnot(0, target);
+    }
+    match StateVectorSimulator::new().run(&circuit, 2048) {
+        Ok(result) => {
+            println!("circuit: {:?}", circuit.summary());
+            println!("diagram:\n{}", circuit.diagram());
+            println!("gate counts: {:?}", circuit.gate_counts());
+            println!("p(0..0) = {:.6}", result.probability_by_state(0));
+            println!("p(1..1) = {:.6}", result.probability_by_state((1 << qubits) - 1));
+            println!("<Z0> = {:.6}", result.state().expectation_z(0).unwrap());
+            println!("shannon = {:.6} bits", result.shannon_entropy());
+            println!("renyi2  = {:.6} bits", result.min_entropy());
+        }
+        Err(err) => eprintln!("error: {err}"),
+    }
+}
+
 fn run(circuit: &Circuit, shots: usize) {
     match StateVectorSimulator::new().run(circuit, shots) {
         Ok(result) => {
@@ -212,6 +238,6 @@ fn run(circuit: &Circuit, shots: usize) {
 
 fn print_usage() {
     println!(
-        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli version\n"
+        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli analyze [qubits]\n  qsimx-cli version\n"
     );
 }
