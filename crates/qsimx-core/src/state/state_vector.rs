@@ -344,6 +344,12 @@ impl StateVector {
         Ok(rho)
     }
 
+    /// Expectation value of the Pauli Z operator on one qubit.
+    pub fn expectation_z(&self, qubit: usize) -> Result<f64, StateVectorError> {
+        let rho = self.reduced_density_matrix(qubit)?;
+        Ok(rho[0][0].re - rho[1][1].re)
+    }
+
     pub fn bloch_vector(&self, qubit: usize) -> Result<[f64; 3], StateVectorError> {
         let rho = self.reduced_density_matrix(qubit)?;
         Ok([

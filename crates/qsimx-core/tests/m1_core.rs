@@ -212,3 +212,14 @@ fn iteration10_result_probability_and_min_entropy_work() {
     assert_eq!(empty.probability_by_state(0), 0.0);
     assert_eq!(empty.min_entropy(), 0.0);
 }
+
+#[test]
+fn iteration10_expectation_z_matches_bloch_z() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(1);
+    circuit.ry(0, 0.7);
+    let state = sim.run_state(&circuit).unwrap();
+    let z = state.expectation_z(0).unwrap();
+    assert!((z - state.bloch_vector(0).unwrap()[2]).abs() < 1e-12);
+    assert!((z - 0.7_f64.cos()).abs() < 1e-12);
+}
