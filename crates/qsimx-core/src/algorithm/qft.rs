@@ -217,6 +217,43 @@ pub fn qft_phase_circular_skewness(result: &QftResult) -> f64 {
     (third / resultant.powi(3)).clamp(-1.0, 1.0)
 }
 
+/// Circular kurtosis of nonzero Fourier-mode phases around their mean direction.
+/// Values near zero indicate a von Mises-like phase distribution.
+pub fn qft_phase_circular_kurtosis(result: &QftResult) -> f64 {
+    let mut cos_sum = 0.0;
+    let mut sin_sum = 0.0;
+    let mut count = 0usize;
+    for amplitude in result.state.amplitudes() {
+        if amplitude.norm_sqr() <= f64::EPSILON {
+            continue;
+        }
+        let phase = amplitude.arg();
+        cos_sum += phase.cos();
+        sin_sum += phase.sin();
+        count += 1;
+    }
+    if count == 0 {
+        return 0.0;
+    }
+    let resultant = (cos_sum / count as f64).hypot(sin_sum / count as f64);
+    if resultant <= f64::EPSILON {
+        return 0.0;
+    }
+    let mean_angle = (sin_sum / count as f64).atan2(cos_sum / count as f64);
+    let fourth = result
+        .state
+        .amplitudes()
+        .iter()
+        .filter(|amplitude| amplitude.norm_sqr() > f64::EPSILON)
+        .map(|amplitude| {
+            let delta = amplitude.arg() - mean_angle;
+            delta.cos().powi(4)
+        })
+        .sum::<f64>()
+        / count as f64;
+    (fourth / resultant.powi(4)).clamp(-1.0, 1.0)
+}
+
 /// Fidelity between the QFT output and the inverse-QFT output of a state.
 pub fn qft_roundtrip_fidelity(
     targets: &[usize],

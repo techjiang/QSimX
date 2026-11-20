@@ -1123,3 +1123,11 @@ fn iteration68_grover_success_roughness_is_finite() {
     assert!(roughness >= 0.0);
     assert!(grover_success_roughness(0, &oracle, 2).is_err());
 }
+
+#[test]
+fn iteration69_qft_phase_circular_kurtosis_is_bounded() {
+    let result = qft(&[0, 1, 2], 3).unwrap();
+    let kurtosis = qft_phase_circular_kurtosis(&result);
+    assert!(kurtosis.is_finite());
+    assert!((-1.0..=1.0).contains(&kurtosis));
+}

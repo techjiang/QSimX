@@ -16,7 +16,7 @@ pub mod prelude {
         grover_success_skewness, grover_success_variance, inverse_qft, qft, qft_adjacent_phase_gap,
         qft_adjacent_phase_step, qft_average_probability, qft_density_balance, qft_density_gap,
         qft_gate_balance, qft_gate_density, qft_gate_fidelity, qft_gate_symmetry,
-        qft_inverse_distribution_gap, qft_pair_is_reversible, qft_phase_balance,
+        qft_inverse_distribution_gap, qft_pair_is_reversible, qft_phase_balance, qft_phase_circular_kurtosis,
         qft_phase_circular_skewness, qft_phase_circular_variance, qft_phase_resultant_length,
         qft_probability_imbalance, qft_roundtrip_fidelity, qft_sparsity, qft_uniform_deviation,
         recommended_grover_iterations,
