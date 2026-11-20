@@ -100,6 +100,21 @@ cargo run -p qsimx-cli -- qft-m2 3
 
 当前环境若没有 Rust 工具链，上述命令需在 Rust 2024 环境中执行；截图只展示真实执行过的命令输出。
 
+## 第十一轮迭代
+
+1. `grover_peak_width()`：统计 Grover 成功率越过阈值的迭代宽度
+2. `qft_phase_balance()`：比较 QFT 奇偶模相位均值给出平衡分
+3. `Circuit::distinct_touching_qubit_count()`：统计实际参与门操作的量子比特
+4. `StateVector::max_probability()`：返回最大基态概率，并复用至 `inverse_max_probability()`
+5. CLI 新增 `verify-m2-shape [qubits]`，补齐 5 项回归测试
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -p qsimx-cli -- verify-m2-shape 3
+```
+
 ## Rust 示例
 
 ```rust
