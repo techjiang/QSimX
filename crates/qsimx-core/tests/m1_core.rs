@@ -804,3 +804,12 @@ fn iteration32_qft_gate_fidelity_is_bounded() {
     assert!((0.0..=1.0).contains(&fidelity));
     assert!(qft_gate_fidelity(&result, 0).is_err());
 }
+
+#[test]
+fn iteration33_grover_peak_width_counts_above_target() {
+    let oracle = GroverOracle::marked(0b11);
+    let width = grover_peak_width(2, &oracle, 5, 0.5).unwrap();
+    assert!(width >= 1);
+    assert_eq!(grover_peak_width(2, &oracle, 5, 1.1).unwrap(), 0);
+    assert!(grover_peak_width(0, &oracle, 2, 0.5).is_err());
+}

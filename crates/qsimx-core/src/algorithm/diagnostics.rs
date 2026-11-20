@@ -95,6 +95,20 @@ pub fn grover_peak_step(
         .fold(0.0_f64, f64::max))
 }
 
+/// Number of iterations in the peak window whose success probability is at least `target`.
+pub fn grover_peak_width(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+    target: f64,
+) -> GroverAnalysisResult<usize> {
+    let curve = crate::algorithm::grover_success_curve(qubits, oracle, max_iterations)?;
+    Ok(curve
+        .iter()
+        .filter(|&&probability| probability >= target)
+        .count())
+}
+
 /// Time-averaged marked-state probability over all Grover iterations up to `max_iterations`.
 pub fn grover_success_area(
     qubits: usize,
