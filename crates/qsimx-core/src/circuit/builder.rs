@@ -338,6 +338,18 @@ impl Circuit {
         }
     }
 
+    /// Average number of gates touching each circuit qubit, including qubits with no gates.
+    pub fn average_gate_load(&self) -> f64 {
+        if self.qubits == 0 {
+            return 0.0;
+        }
+        self.gates
+            .iter()
+            .map(|gate| gate.qubits().len() as f64)
+            .sum::<f64>()
+            / self.qubits as f64
+    }
+
     /// Ratio of entangling gates to all gates; zero for an empty circuit.
     pub fn multi_qubit_gate_ratio(&self) -> f64 {
         if self.gates.is_empty() {
