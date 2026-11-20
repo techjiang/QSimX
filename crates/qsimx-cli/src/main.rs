@@ -5,11 +5,11 @@ use qsimx::prelude::{
     grover_ascending_steps, grover_first_success_iteration, grover_peak_delta, grover_peak_drop,
     grover_peak_iteration, grover_peak_step, grover_peak_width, grover_peak_width_ratio,
     grover_recommended_gain, grover_search, grover_success_area, grover_success_cumulative,
-    grover_success_curve, grover_success_kurtosis, grover_success_path_length,
+    grover_success_curve, grover_success_kurtosis, grover_success_path_length, grover_success_roughness,
     grover_success_skewness, grover_success_variance, inverse_qft, qft, qft_adjacent_phase_gap,
     qft_adjacent_phase_step, qft_average_probability, qft_density_balance, qft_density_gap,
     qft_gate_balance, qft_gate_density, qft_gate_fidelity, qft_gate_symmetry,
-    qft_inverse_distribution_gap, qft_pair_is_reversible, qft_phase_balance,
+    qft_inverse_distribution_gap, qft_pair_is_reversible, qft_phase_balance, qft_phase_circular_kurtosis,
     qft_phase_circular_skewness, qft_phase_circular_variance, qft_phase_resultant_length,
     qft_probability_imbalance, qft_roundtrip_fidelity, qft_sparsity, qft_uniform_deviation,
     recommended_grover_iterations,
@@ -112,6 +112,9 @@ fn main() {
         }
         "verify-m2-fingerprint" => {
             run_verify_m2_fingerprint(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
+        }
+        "verify-m2-contour" => {
+            run_verify_m2_contour(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
         }
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
@@ -1113,7 +1116,7 @@ fn run(circuit: &Circuit, shots: usize) {
 
 fn print_usage() {
     println!(
-        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli verify-m2-report [qubits]\n  qsimx-cli verify-m2-cond [qubits]\n  qsimx-cli verify-m2-dist [qubits]\n  qsimx-cli verify-m2-balance [qubits]\n  qsimx-cli verify-m2-parity [qubits]\n  qsimx-cli verify-m2-diagnostics [qubits]\n  qsimx-cli verify-m2-next [qubits]\n  qsimx-cli verify-m2-advanced [qubits]\n  qsimx-cli verify-m2-shape [qubits]\n  qsimx-cli verify-m2-curve [qubits]\n  qsimx-cli verify-m2-motion [qubits]\n  qsimx-cli verify-m2-stats [qubits]\n  qsimx-cli verify-m2-profile [qubits]\n  qsimx-cli verify-m2-signature [qubits]\n  qsimx-cli verify-m2-fingerprint [qubits]\n  qsimx-cli version\n"
+        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli verify-m2-report [qubits]\n  qsimx-cli verify-m2-cond [qubits]\n  qsimx-cli verify-m2-dist [qubits]\n  qsimx-cli verify-m2-balance [qubits]\n  qsimx-cli verify-m2-parity [qubits]\n  qsimx-cli verify-m2-diagnostics [qubits]\n  qsimx-cli verify-m2-next [qubits]\n  qsimx-cli verify-m2-advanced [qubits]\n  qsimx-cli verify-m2-shape [qubits]\n  qsimx-cli verify-m2-curve [qubits]\n  qsimx-cli verify-m2-motion [qubits]\n  qsimx-cli verify-m2-stats [qubits]\n  qsimx-cli verify-m2-profile [qubits]\n  qsimx-cli verify-m2-signature [qubits]\n  qsimx-cli verify-m2-fingerprint [qubits]\n  qsimx-cli verify-m2-contour [qubits]\n  qsimx-cli version\n"
     );
 }
 
@@ -1513,4 +1516,48 @@ fn run_verify_m2_fingerprint(qubits: usize) {
         "ghz entangling gate density: {:.6}",
         ghz.entangling_gate_density()
     );
+}
+
+
+fn run_verify_m2_contour(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: qubits must be at least 1");
+        return;
+    }
+    let oracle = GroverOracle::marked((1usize << qubits) - 1);
+    let roughness = match grover_success_roughness(qubits, &oracle, 6) {
+        Ok(value) => value,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let targets: Vec<usize> = (0..qubits).collect();
+    let forward = match qft(&targets, qubits) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let mut ghz = Circuit::new(qubits);
+    ghz.h(0);
+    for target in 1..qubits {
+        ghz.cnot(0, target);
+    }
+    let state = match StateVectorSimulator::new().run_state(&ghz) {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    println!("qubits: {qubits}");
+    println!("grover success roughness: {roughness:.6}");
+    println!(
+        "qft phase circular kurtosis: {:.6}",
+        qft_phase_circular_kurtosis(&forward)
+    );
+    println!("ghz zero-one balance: {:.6}", state.zero_one_balance());
+    println!("ghz gate qubit span: {}", ghz.gate_qubit_span());
 }

@@ -420,3 +420,18 @@ cargo run -q -p qsimx-cli -- verify-m2-signature 3
 cargo test --workspace
 cargo run -q -p qsimx-cli -- verify-m2-fingerprint 3
 ```
+
+## 第二十六轮迭代（本轮 5 次更新）
+
+1. `StateVector::zero_one_balance()`：各量子比特 0/1 测量平衡度。
+2. `Circuit::gate_qubit_span()`：门操作覆盖的量子比特索引跨度。
+3. `grover_success_roughness()`：Grover 成功率曲线的二阶差分粗糙度。
+4. `qft_phase_circular_kurtosis()`：QFT 傅里叶模式相位的圆峰度。
+5. CLI 新增 `verify-m2-contour [qubits]`，补充 5 项回归测试。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-contour 3
+```
