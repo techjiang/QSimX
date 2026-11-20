@@ -1,5 +1,5 @@
 mod grover;
 mod qft;
 
-pub use grover::{grover_search, GroverOracle, GroverResult};
-pub use qft::{inverse_qft, qft, QftResult};
+pub use grover::{GroverOracle, GroverResult, grover_search};
+pub use qft::{QftResult, inverse_qft, qft};

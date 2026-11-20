@@ -1,8 +1,6 @@
 use std::env;
 
-use qsimx::prelude::{
-    grover_search, qft, Circuit, GroverOracle, StateVectorSimulator,
-};
+use qsimx::prelude::{Circuit, GroverOracle, StateVectorSimulator, grover_search, qft};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -21,11 +19,17 @@ fn main() {
         }
         "grover" => {
             let qubits = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
-            run_grover(qubits, args.get(3).and_then(|s| s.parse().ok()).unwrap_or(1024));
+            run_grover(
+                qubits,
+                args.get(3).and_then(|s| s.parse().ok()).unwrap_or(1024),
+            );
         }
         "qft" => {
             let qubits = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
-            run_qft(qubits, args.get(3).and_then(|s| s.parse().ok()).unwrap_or(1024));
+            run_qft(
+                qubits,
+                args.get(3).and_then(|s| s.parse().ok()).unwrap_or(1024),
+            );
         }
         "standard" => run_standard(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3)),
         "inspect" => {
@@ -138,11 +142,31 @@ fn run_standard(qubits: usize) {
         Ok(result) => {
             let reference = StateVectorSimulator::new().run_state(&circuit).unwrap();
             println!("standard summary: {:?}", circuit.summary());
-            println!("zero probability q0: {:.6}", result.state().zero_probability(0).unwrap());
+            println!(
+                "zero probability q0: {:.6}",
+                result.state().zero_probability(0).unwrap()
+            );
             println!("phase |0>: {:.6}", result.state().phase(0));
-            println!("state fidelity: {:.6}", result.state_fidelity(&reference).unwrap());
-            println!("gate names: {:?}", circuit.gates().iter().map(|gate| gate.name()).collect::<Vec<_>>());
-            println!("qasm names: {:?}", circuit.gates().iter().map(|gate| gate.qasm_name()).collect::<Vec<_>>());
+            println!(
+                "state fidelity: {:.6}",
+                result.state_fidelity(&reference).unwrap()
+            );
+            println!(
+                "gate names: {:?}",
+                circuit
+                    .gates()
+                    .iter()
+                    .map(|gate| gate.name())
+                    .collect::<Vec<_>>()
+            );
+            println!(
+                "qasm names: {:?}",
+                circuit
+                    .gates()
+                    .iter()
+                    .map(|gate| gate.qasm_name())
+                    .collect::<Vec<_>>()
+            );
         }
         Err(err) => eprintln!("error: {err}"),
     }
@@ -162,7 +186,15 @@ fn run_inspect(qubits: usize) {
         Ok(result) => {
             println!("circuit depth: {}", circuit.depth());
             println!("gate counts: {:?}", circuit.gate_counts());
-            println!("nonzero amplitudes: {}", result.state().amplitudes().iter().filter(|a| a.norm_sqr() > 1e-12).count());
+            println!(
+                "nonzero amplitudes: {}",
+                result
+                    .state()
+                    .amplitudes()
+                    .iter()
+                    .filter(|a| a.norm_sqr() > 1e-12)
+                    .count()
+            );
             let probs = result.state().probabilities();
             let max = probs.iter().copied().fold(0.0f64, f64::max);
             println!("max probability: {max:.6}");
@@ -190,9 +222,19 @@ fn run_summary9(qubits: usize) {
     match StateVectorSimulator::new().run(&circuit, 1024) {
         Ok(result) => {
             println!("summary: {:?}", circuit.summary());
-            println!("one probability q0: {:.6}", result.state().one_probability(0).unwrap());
+            println!(
+                "one probability q0: {:.6}",
+                result.state().one_probability(0).unwrap()
+            );
             println!("most likely: {:?}", result.most_likely());
-            println!("qasm names: {:?}", circuit.gates().iter().map(|g| g.qasm_name()).collect::<Vec<_>>());
+            println!(
+                "qasm names: {:?}",
+                circuit
+                    .gates()
+                    .iter()
+                    .map(|g| g.qasm_name())
+                    .collect::<Vec<_>>()
+            );
         }
         Err(err) => eprintln!("error: {err}"),
     }
@@ -204,7 +246,9 @@ fn run_grover_m2(qubits: usize) {
         return;
     }
     let marked = (1usize << qubits) - 1;
-    let iterations = ((1usize << qubits) as f64).sqrt().floor() as usize;
+    let iterations = (((1usize << qubits) as f64).sqrt() * std::f64::consts::PI / 4.0)
+        .round()
+        .max(1.0) as usize;
     match grover_search(qubits, &GroverOracle::marked(marked), iterations) {
         Ok(result) => {
             println!("algorithm: grover");
@@ -213,8 +257,11 @@ fn run_grover_m2(qubits: usize) {
             println!("iterations: {}", result.iterations);
             println!("gates: {}", result.circuit.gates().len());
             println!("marked_probability: {:.6}", result.marked_probability);
-            println!("
-circuit:\n{}", result.circuit.diagram());
+            println!(
+                "
+circuit:\n{}",
+                result.circuit.diagram()
+            );
         }
         Err(err) => eprintln!("error: {err}"),
     }
@@ -247,12 +294,20 @@ fn run(circuit: &Circuit, shots: usize) {
             for (state, count) in result.sorted_counts() {
                 println!("  {state:0width$b}: {count}", width = circuit.qubits());
             }
-            let max = result.sorted_counts().iter().map(|(_, c)| *c).max().unwrap_or(1);
+            let max = result
+                .sorted_counts()
+                .iter()
+                .map(|(_, c)| *c)
+                .max()
+                .unwrap_or(1);
             println!("histogram:");
             for (state, count) in result.sorted_counts() {
                 let filled = (count * 32) / max;
                 let bar: String = std::iter::repeat('#').take(filled).collect();
-                println!("  {state:0width$b} | {bar:<32} {count}", width = circuit.qubits());
+                println!(
+                    "  {state:0width$b} | {bar:<32} {count}",
+                    width = circuit.qubits()
+                );
             }
         }
         Err(err) => eprintln!("error: {err}"),

@@ -3,14 +3,13 @@ use std::f64::consts::PI;
 use crate::circuit::{Circuit, SimulatorError, StateVectorSimulator};
 use crate::state::StateVector;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct QftResult {
     pub circuit: Circuit,
     pub state: StateVector,
 }
 
-/// Build and simulate the standard QFT circuit on `targets` qubits.
-/// `targets` is an ordered list, so `targets[0]` is the most significant bit.
+/// Build and simulate QFT on `targets`. `targets[0]` is the most significant bit.
 pub fn qft(targets: &[usize], qubits: usize) -> Result<QftResult, QftError> {
     build_qft(targets, qubits, false)
 }
@@ -33,25 +32,15 @@ fn build_qft(targets: &[usize], qubits: usize, inverse: bool) -> Result<QftResul
         seen.push(q);
     }
 
-    let controlled = if inverse {
-        (0..targets.len()).rev().collect::<Vec<_>>()
-    } else {
-        (0..targets.len()).collect::<Vec<_>>()
-    };
-    let swaps = if inverse {
-        (0..targets.len() / 2).rev().collect::<Vec<_>>()
-    } else {
-        (0..targets.len() / 2).collect::<Vec<_>>()
-    };
-
-    for &i in &controlled {
-        circuit.h(targets[i]);
-        for j in i + 1..targets.len() {
-            let angle = if inverse { -PI } else { PI } / (1usize << (j - i)) as f64;
-            circuit.cp(targets[j], targets[i], angle);
+    for stage in 0..targets.len() {
+        circuit.h(targets[stage]);
+        for offset in 1..targets.len() - stage {
+            let angle = PI / (1usize << offset) as f64;
+            let controlled_angle = if inverse { -angle } else { angle };
+            circuit.cp(targets[stage + offset], targets[stage], controlled_angle);
         }
     }
-    for i in swaps {
+    for i in 0..targets.len() / 2 {
         circuit.swap(targets[i], targets[targets.len() - 1 - i]);
     }
 

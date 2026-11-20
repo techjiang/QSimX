@@ -1,4 +1,3 @@
-use crate::algorithm::qft::{inverse_qft, qft};
 use crate::circuit::{Circuit, SimulatorError, StateVectorSimulator};
 use crate::state::StateVector;
 
@@ -16,10 +15,9 @@ impl GroverOracle {
     pub fn circuit(circuit: Circuit) -> Self {
         Self::Circuit(circuit)
     }
-
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct GroverResult {
     pub circuit: Circuit,
     pub state: StateVector,
@@ -27,7 +25,6 @@ pub struct GroverResult {
     pub iterations: usize,
 }
 
-/// Run Grover search with an exact amplitude amplification step.
 pub fn grover_search(
     qubits: usize,
     oracle: &GroverOracle,
@@ -58,7 +55,6 @@ pub fn grover_search(
         }
     };
 
-    let targets: Vec<usize> = (0..qubits).collect();
     let mut circuit = Circuit::new(qubits);
     for q in 0..qubits {
         circuit.h(q);
@@ -66,15 +62,11 @@ pub fn grover_search(
 
     for iteration in 0..iterations {
         match oracle {
-            GroverOracle::Marked(_) => apply_phase_oracle(&mut circuit, qubits, marked),
-            GroverOracle::Circuit(oracle_circuit) => {
-                for gate in oracle_circuit.gates() {
-                    circuit.push(gate.clone());
-                }
-            }
+            GroverOracle::Marked(_) => apply_phase_oracle(&mut circuit, qubits, marked)?,
+            GroverOracle::Circuit(oracle_circuit) => append_gates(&mut circuit, oracle_circuit),
         }
         if iteration + 1 < iterations {
-            apply_diffusion(&mut circuit, &targets)?;
+            apply_diffusion(&mut circuit, qubits)?;
         }
     }
 
@@ -83,10 +75,7 @@ pub fn grover_search(
         .map_err(GroverError::Simulator)?;
     let marked_probability = match oracle {
         GroverOracle::Marked(_) => state.probability(marked),
-        GroverOracle::Circuit(_) => state
-            .probabilities()
-            .into_iter()
-            .fold(0.0_f64, f64::max),
+        GroverOracle::Circuit(_) => state.probabilities().into_iter().fold(0.0_f64, f64::max),
     };
 
     Ok(GroverResult {
@@ -97,38 +86,70 @@ pub fn grover_search(
     })
 }
 
-fn apply_phase_oracle(circuit: &mut Circuit, qubits: usize, marked: usize) {
+fn apply_phase_oracle(
+    circuit: &mut Circuit,
+    qubits: usize,
+    marked: usize,
+) -> Result<(), GroverError> {
     for q in 0..qubits {
         if marked & (1 << q) == 0 {
             circuit.x(q);
         }
     }
-    if qubits == 1 {
-        circuit.z(0);
-    } else {
-        multi_controlled_z(circuit, &((0..qubits).collect::<Vec<_>>()));
+    match qubits {
+        1 => {
+            circuit.z(0);
+        }
+        2 => {
+            circuit.cz(0, 1);
+        }
+        _ => {
+            for q in 0..qubits {
+                circuit.h(q);
+            }
+            for q in 0..qubits {
+                circuit.x(q);
+            }
+            for q in 1..qubits {
+                circuit.h(q);
+            }
+            for control in 1..qubits {
+                for target in 0..control {
+                    circuit.cp(control, target, std::f64::consts::PI);
+                }
+            }
+            for q in 1..qubits {
+                circuit.h(q);
+            }
+            for q in 0..qubits {
+                circuit.x(q);
+            }
+            for q in 0..qubits {
+                circuit.h(q);
+            }
+        }
     }
     for q in 0..qubits {
         if marked & (1 << q) == 0 {
             circuit.x(q);
         }
     }
+    Ok(())
 }
 
-fn apply_diffusion(circuit: &mut Circuit, targets: &[usize]) -> Result<(), GroverError> {
-    for &q in targets {
+fn apply_diffusion(circuit: &mut Circuit, qubits: usize) -> Result<(), GroverError> {
+    for q in 0..qubits {
+        circuit.h(q);
+    }
+    for q in 0..qubits {
         circuit.x(q);
     }
-    multi_controlled_z(circuit, targets);
-    for &q in targets {
+    phase_flip_all_ones(circuit, qubits)?;
+    for q in 0..qubits {
         circuit.x(q);
     }
-    let qubits = targets.iter().copied().max().unwrap_or(0) + 1;
-    let forward = qft(targets, qubits).map_err(|_| GroverError::InvalidDiffuser)?;
-    let inverse = inverse_qft(targets, qubits).map_err(|_| GroverError::InvalidDiffuser)?;
-    append_gates(circuit, &forward.circuit);
-    for gate in inverse.circuit.gates() {
-        circuit.push(gate.clone());
+    for q in 0..qubits {
+        circuit.h(q);
     }
     Ok(())
 }
@@ -139,24 +160,31 @@ fn append_gates(circuit: &mut Circuit, source: &Circuit) {
     }
 }
 
-fn multi_controlled_z(circuit: &mut Circuit, qubits: &[usize]) {
-    match qubits.len() {
+/// Flip the phase of the all-ones basis state.
+fn phase_flip_all_ones(circuit: &mut Circuit, qubits: usize) -> Result<(), GroverError> {
+    match qubits {
         0 => {}
         1 => {
-            circuit.z(qubits[0]);
+            circuit.z(0);
         }
         2 => {
-            circuit.cz(qubits[0], qubits[1]);
+            circuit.cz(0, 1);
         }
         _ => {
-            let target = qubits[qubits.len() - 1];
-            circuit.h(target);
-            for pair in qubits.windows(2) {
-                circuit.toffoli(pair[0], pair[1], target);
+            for q in 0..qubits {
+                circuit.x(q);
             }
-            circuit.h(target);
+            for control in 0..qubits {
+                for target in (control + 1)..qubits {
+                    circuit.cp(control, target, std::f64::consts::PI);
+                }
+            }
+            for q in 0..qubits {
+                circuit.x(q);
+            }
         }
     }
+    Ok(())
 }
 
 #[derive(Debug, thiserror::Error)]

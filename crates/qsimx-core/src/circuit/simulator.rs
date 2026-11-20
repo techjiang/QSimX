@@ -61,7 +61,10 @@ impl SimulationResult {
     }
 
     /// Squared overlap between this result and the simulated state of another circuit.
-    pub fn state_fidelity(&self, other_state: &crate::state::StateVector) -> Result<f64, SimulatorError> {
+    pub fn state_fidelity(
+        &self,
+        other_state: &crate::state::StateVector,
+    ) -> Result<f64, SimulatorError> {
         Ok(self.state.fidelity(other_state)?)
     }
 
@@ -88,13 +91,13 @@ impl SimulationResult {
         let entries: Vec<String> = self
             .sorted_counts()
             .iter()
-            .map(|(state, count)| {
-                format!(
-                    "{{\"state\":\"{state:0width$b}\",\"count\":{count}}}"
-                )
-            })
+            .map(|(state, count)| format!("{{\"state\":\"{state:0width$b}\",\"count\":{count}}}"))
             .collect();
-        format!("{{\"shots\":{},\"counts\":[{}]}}", self.shots, entries.join(","))
+        format!(
+            "{{\"shots\":{},\"counts\":[{}]}}",
+            self.shots,
+            entries.join(",")
+        )
     }
 }
 
