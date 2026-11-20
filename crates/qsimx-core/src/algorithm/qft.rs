@@ -124,6 +124,21 @@ pub fn qft_phase_balance(result: &QftResult) -> f64 {
     (1.0 - gap / std::f64::consts::PI).clamp(0.0, 1.0)
 }
 
+/// Largest phase gap between adjacent Fourier modes, normalized by pi.
+pub fn qft_adjacent_phase_gap(result: &QftResult) -> f64 {
+    let phases: Vec<f64> = result
+        .state
+        .amplitudes()
+        .iter()
+        .filter_map(|amplitude| (amplitude.norm_sqr() > f64::EPSILON).then(|| amplitude.arg()))
+        .collect();
+    phases
+        .windows(2)
+        .map(|pair| (pair[0] - pair[1]).abs())
+        .fold(0.0_f64, f64::max)
+        / std::f64::consts::PI
+}
+
 /// Fidelity between the QFT output and the inverse-QFT output of a state.
 pub fn qft_roundtrip_fidelity(
     targets: &[usize],

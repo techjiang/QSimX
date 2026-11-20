@@ -109,6 +109,19 @@ pub fn grover_peak_width(
         .count())
 }
 
+/// Largest drop between two consecutive Grover success probabilities.
+pub fn grover_peak_drop(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> GroverAnalysisResult<f64> {
+    let curve = crate::algorithm::grover_success_curve(qubits, oracle, max_iterations)?;
+    Ok(curve
+        .windows(2)
+        .map(|pair| (pair[0] - pair[1]).max(0.0))
+        .fold(0.0_f64, f64::max))
+}
+
 /// Time-averaged marked-state probability over all Grover iterations up to `max_iterations`.
 pub fn grover_success_area(
     qubits: usize,

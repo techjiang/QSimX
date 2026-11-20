@@ -115,6 +115,21 @@ cargo test --workspace
 cargo run -p qsimx-cli -- verify-m2-shape 3
 ```
 
+## 第十二轮迭代
+
+1. `grover_peak_drop()`：统计 Grover 成功率相邻迭代的最大回落
+2. `qft_adjacent_phase_gap()`：统计 QFT 相邻傅里叶模式的最大相位差
+3. `Circuit::single_qubit_gate_count()`：统计单量子比特门数量
+4. CLI 新增 `verify-m2-curve [qubits]`，汇总本轮四项指标
+5. 补充 4 项回归测试
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -p qsimx-cli -- verify-m2-curve 3
+```
+
 ## Rust 示例
 
 ```rust

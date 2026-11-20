@@ -840,3 +840,35 @@ fn iteration36_max_probability_matches_inverse_dimension() {
     assert!((uniform.max_probability() - 0.25).abs() < 1e-12);
     assert!((uniform.inverse_max_probability() - 4.0).abs() < 1e-12);
 }
+
+#[test]
+fn iteration38_grover_peak_drop_is_non_negative() {
+    let oracle = GroverOracle::marked(0b11);
+    let drop = grover_peak_drop(2, &oracle, 5).unwrap();
+    assert!((0.0..=1.0).contains(&drop));
+    assert!(grover_peak_drop(2, &oracle, 1).unwrap() <= drop + 1e-12);
+    assert!(grover_peak_drop(0, &oracle, 2).is_err());
+}
+
+#[test]
+fn iteration39_qft_adjacent_phase_gap_is_bounded() {
+    let result = qft(&[0, 1], 2).unwrap();
+    let gap = qft_adjacent_phase_gap(&result);
+    assert!((0.0..=1.0).contains(&gap));
+}
+
+#[test]
+fn iteration40_single_qubit_gate_count_excludes_multi_qubit_gates() {
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).x(0).cnot(0, 1);
+    assert_eq!(circuit.single_qubit_gate_count(), 2);
+    assert_eq!(Circuit::new(2).single_qubit_gate_count(), 0);
+}
+
+#[test]
+fn iteration41_ghz_odd_parity_probability_is_zero() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).cnot(0, 1).cnot(0, 2);
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((state.odd_parity_probability() - 0.0).abs() < 1e-12);
+}
