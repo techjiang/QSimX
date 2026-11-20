@@ -83,6 +83,17 @@ pub fn qft_gate_symmetry(result: &QftResult, inverse: &QftResult) -> f64 {
     result.circuit.gates().len() as f64 / inverse.circuit.gates().len() as f64
 }
 
+/// Gate-count balance between forward and inverse QFT: `1 - |a-b| / max(a,b)`.
+pub fn qft_gate_balance(result: &QftResult, inverse: &QftResult) -> f64 {
+    let forward = result.circuit.gates().len();
+    let backward = inverse.circuit.gates().len();
+    let largest = forward.max(backward);
+    if largest == 0 {
+        return 1.0;
+    }
+    1.0 - (forward.abs_diff(backward) as f64 / largest as f64)
+}
+
 /// Fidelity between the QFT output and the inverse-QFT output of a state.
 pub fn qft_roundtrip_fidelity(
     targets: &[usize],

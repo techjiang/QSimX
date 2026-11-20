@@ -496,7 +496,11 @@ fn iteration16_jensen_shannon_divergence_bounds() {
     assert!(jsd >= 0.0);
     assert!(jsd <= 1.0);
     assert!((ghz_state.jensen_shannon_divergence(&ghz_state).unwrap()).abs() < 1e-12);
-    assert!(ghz_state.jensen_shannon_divergence(&StateVector::zero(1).unwrap()).is_err());
+    assert!(
+        ghz_state
+            .jensen_shannon_divergence(&StateVector::zero(1).unwrap())
+            .is_err()
+    );
 }
 
 #[test]
@@ -523,4 +527,46 @@ fn iteration16_roundtrip_fidelity_stays_one() {
     let initial = StateVector::zero(3).unwrap();
     let fidelity = qft_roundtrip_fidelity(&targets, 3, &initial).unwrap();
     assert!((fidelity - 1.0).abs() < 1e-10);
+}
+
+#[test]
+fn iteration17_even_parity_probability_matches_explicit_counts() {
+    let mut circuit = Circuit::new(2);
+    circuit.x(1);
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!(state.even_parity_probability().abs() < 1e-12);
+    let ghz = {
+        let mut c = Circuit::new(2);
+        c.h(0).cnot(0, 1);
+        StateVectorSimulator::new().run_state(&c).unwrap()
+    };
+    assert!((ghz.even_parity_probability() - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration17_renyi2_entropy_bounds() {
+    let zero = StateVector::zero(2).unwrap();
+    assert!(zero.renyi2_entropy().abs() < 1e-12);
+    let uniform = {
+        let mut c = Circuit::new(2);
+        c.h(0).h(1);
+        StateVectorSimulator::new().run_state(&c).unwrap()
+    };
+    assert!((uniform.renyi2_entropy() - 2.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration17_qft_gate_balance_is_stable() {
+    let targets = [0usize, 1, 2];
+    let forward = qft(&targets, 3).unwrap();
+    let inverse = inverse_qft(&targets, 3).unwrap();
+    assert!((qft_gate_balance(&forward, &inverse) - 1.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration17_min_gates_per_touched_qubit_ignores_idle_wires() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).h(0).x(1).cnot(0, 1);
+    assert_eq!(circuit.min_gates_per_touched_qubit(), 3);
+    assert_eq!(Circuit::new(3).min_gates_per_touched_qubit(), 0);
 }

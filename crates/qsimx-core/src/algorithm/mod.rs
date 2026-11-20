@@ -6,6 +6,6 @@ pub use grover::{
     grover_success_cumulative, grover_success_curve, recommended_grover_iterations,
 };
 pub use qft::{
-    QftResult, QftRoundTripError, inverse_qft, qft, qft_average_probability, qft_gate_density,
-    qft_density_gap, qft_gate_symmetry, qft_roundtrip_fidelity, qft_sparsity,
+    QftResult, QftRoundTripError, inverse_qft, qft, qft_average_probability, qft_density_gap,
+    qft_gate_balance, qft_gate_density, qft_gate_symmetry, qft_roundtrip_fidelity, qft_sparsity,
 };

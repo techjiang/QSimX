@@ -349,6 +349,26 @@ impl StateVector {
         Ok(if result == usize::MAX { 0 } else { result })
     }
 
+    /// Probability mass carried by the computational basis states with even parity.
+    pub fn even_parity_probability(&self) -> f64 {
+        self.amplitudes
+            .iter()
+            .enumerate()
+            .filter(|(index, _)| index.count_ones() % 2 == 0)
+            .map(|(_, amplitude)| amplitude.norm_sqr())
+            .sum()
+    }
+
+    /// Rényi entropy of order 2 over the basis-state distribution, in bits.
+    pub fn renyi2_entropy(&self) -> f64 {
+        let purity: f64 = self.amplitudes.iter().map(|a| a.norm_sqr().powi(2)).sum();
+        if purity <= f64::EPSILON {
+            0.0
+        } else {
+            -purity.log2()
+        }
+    }
+
     /// Cumulative probability distribution indexed by basis state.
     /// Jensen-Shannon divergence between two basis-state probability distributions.
     pub fn jensen_shannon_divergence(&self, other: &StateVector) -> Result<f64, StateVectorError> {
@@ -360,11 +380,7 @@ impl StateVector {
         }
         let mix = 0.5;
         let kl = |p: f64, q: f64| {
-            if p <= 0.0 {
-                0.0
-            } else {
-                p * (p / q).log2()
-            }
+            if p <= 0.0 { 0.0 } else { p * (p / q).log2() }
         };
         let mut divergence = 0.0;
         for (a, b) in self.amplitudes.iter().zip(other.amplitudes.iter()) {

@@ -231,3 +231,18 @@ cargo run -q -p qsimx-cli -- verify-m2-cond 3
 cargo test --workspace
 cargo run -q -p qsimx-cli -- verify-m2-dist 3
 ```
+
+## 第十七轮迭代
+
+1. 新增 `StateVector::even_parity_probability()`，计算偶校验基态概率质量。
+2. 新增 `StateVector::renyi2_entropy()`，计算二阶 Rényi 熵。
+3. 新增 `Circuit::min_gates_per_touched_qubit()`，统计活跃量子线上的最小门负载。
+4. 新增 `qft_gate_balance()`，衡量 QFT 与逆 QFT 的门数平衡度。
+5. CLI 新增 `verify-m2-balance`，并补充 4 项回归测试。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-balance 3
+```

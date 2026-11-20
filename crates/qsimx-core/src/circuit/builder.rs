@@ -218,6 +218,16 @@ impl Circuit {
     }
 
     /// Maximum number of gates applied to any qubit.
+    /// Minimum gate count across qubits that are touched by at least one gate.
+    pub fn min_gates_per_touched_qubit(&self) -> usize {
+        let touched = self.distinct_touching_qubits();
+        touched
+            .iter()
+            .filter_map(|&qubit| self.layers.get(qubit).copied())
+            .min()
+            .unwrap_or(0)
+    }
+
     pub fn max_gates_per_qubit(&self) -> usize {
         let mut counts = vec![0usize; self.qubits];
         for gate in &self.gates {
