@@ -695,6 +695,12 @@ impl StateVector {
             .max(0.0)
     }
 
+    /// Simpson diversity index over the measurement distribution.
+    /// Returns `1 - sum(p^2)`; zero for a basis state and near one for a wide distribution.
+    pub fn outcome_diversity(&self) -> f64 {
+        1.0 - self.probabilities().iter().map(|p| p * p).sum::<f64>()
+    }
+
     /// Balance between |0> and |1> outcomes across all qubits, in `[0, 1]`.
     /// Returns 1 when every qubit is perfectly balanced; 0 for a basis state.
     pub fn zero_one_balance(&self) -> f64 {
