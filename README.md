@@ -119,3 +119,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 ## 许可证
 
 Apache-2.0 © 2026 科技酱
+
+## 第十轮迭代：M2 验证与稳定性
+
+本轮在已有 M2 算法基础上做 5 次增量更新，重点是把 Grover 的迭代数与验证输出做实：
+
+1. 新增 `grover_iterations()` / `recommended_grover_iterations()`，使用 `floor(pi/4 * sqrt(N/M))` 避免小搜索空间过冲，并约束非法输入返回 1 次。
+2. CLI 的 `grover-m2` 改用推荐迭代数，避免 4 qubit 概率被过冲拉低。
+3. 新增 `Circuit::w_state()`，快速构造 active target 上的均匀叠加态。
+4. 新增 `StateVector::significant_basis_count()` 与 `SimulationResult::effective_outcomes()`，便于统计显著基态与有效测量输出数。
+5. CLI 新增 `verify-m2`，集中输出 Grover / QFT / W 态指标，并补齐回归测试。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -p qsimx-cli -- verify-m2 3
+```
+
+本机已安装 Rust 1.100 与 C 工具链后真实执行：`cargo test --workspace` 23/23 通过；`verify-m2 3` 输出 Grover 2 次迭代、标记态概率 0.500000、QFT 7 门、2 个显著振幅、QFT 态归一化。

@@ -1,6 +1,9 @@
 use std::env;
 
-use qsimx::prelude::{Circuit, GroverOracle, StateVectorSimulator, grover_search, qft};
+use qsimx::prelude::{
+    Circuit, GroverOracle, StateVectorSimulator, grover_search, qft,
+    recommended_grover_iterations,
+};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -45,6 +48,7 @@ fn main() {
             let qubits = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
             run_qft_m2(qubits);
         }
+        "verify-m2" => run_verify_m2(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3)),
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
             let mut circuit = Circuit::new(3);
@@ -246,9 +250,7 @@ fn run_grover_m2(qubits: usize) {
         return;
     }
     let marked = (1usize << qubits) - 1;
-    let iterations = (((1usize << qubits) as f64).sqrt() * std::f64::consts::PI / 4.0)
-        .round()
-        .max(1.0) as usize;
+    let iterations = recommended_grover_iterations(qubits);
     match grover_search(qubits, &GroverOracle::marked(marked), iterations) {
         Ok(result) => {
             println!("algorithm: grover");
@@ -282,6 +284,52 @@ fn run_qft_m2(qubits: usize) {
         }
         Err(err) => eprintln!("error: {err}"),
     }
+}
+
+fn run_verify_m2(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: qubits must be at least 1");
+        return;
+    }
+    let marked = (1usize << qubits) - 1;
+    let iterations = recommended_grover_iterations(qubits);
+    let grover = grover_search(qubits, &GroverOracle::marked(marked), iterations);
+    let targets: Vec<usize> = (0..qubits).collect();
+    let transformed = qft(&targets, qubits);
+
+    let mut w = Circuit::new(qubits);
+    w.w_state(&targets);
+    let w_state = StateVectorSimulator::new().run_state(&w);
+
+    let g = match grover {
+        Ok(value) => value,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let q = match transformed {
+        Ok(value) => value,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let ws = match w_state {
+        Ok(value) => value,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+
+    println!("qubits: {qubits}");
+    println!("grover iterations: {}", g.iterations);
+    println!("grover gates: {}", g.circuit.gates().len());
+    println!("grover marked probability: {:.6}", g.marked_probability);
+    println!("qft gates: {}", q.circuit.gates().len());
+    println!("w significant amplitudes: {}", ws.significant_basis_count(1e-12));
+    println!("qft normalized: {}", q.state.is_normalized());
 }
 
 fn run(circuit: &Circuit, shots: usize) {

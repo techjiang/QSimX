@@ -76,6 +76,11 @@ impl SimulationResult {
         counts
     }
 
+    /// Effective number of outcomes: `exp(Shannon entropy)`.
+    pub fn effective_outcomes(&self) -> f64 {
+        2.0_f64.powf(self.shannon_entropy())
+    }
+
     /// Most likely measurement outcome and its probability estimate.
     pub fn most_likely(&self) -> Option<(usize, f64)> {
         if self.shots == 0 {

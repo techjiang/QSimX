@@ -15,6 +15,7 @@ pub mod prelude {
     pub use crate::gate::Gate;
     pub use crate::measure::{computational_probability, expectation};
     pub use crate::state::{Basis, Complex, StateVector, StateVectorError};
+pub use crate::algorithm::{grover_iterations, recommended_grover_iterations};
 }
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

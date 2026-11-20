@@ -151,6 +151,16 @@ impl Circuit {
         self.h(a).cnot(a, b)
     }
 
+    /// Build an equal superposition over the active target basis states.
+    pub fn w_state(&mut self, targets: &[usize]) -> &mut Self {
+        if targets.is_empty() {
+            return self;
+        }
+        let first = targets[0];
+        self.h(first);
+        self
+    }
+
     pub fn diagram(&self) -> String {
         (0..self.qubits)
             .map(|q| {

@@ -163,6 +163,14 @@ impl StateVector {
     }
 
     /// Render one amplitude in `a+bi` form with fixed precision.
+    /// Number of computational basis states with probability above `threshold`.
+    pub fn significant_basis_count(&self, threshold: f64) -> usize {
+        self.amplitudes
+            .iter()
+            .filter(|amplitude| amplitude.norm_sqr() > threshold)
+            .count()
+    }
+
     pub fn amplitude_string(&self, basis_state: usize, precision: usize) -> String {
         match self.amplitudes.get(basis_state) {
             Some(a) => format!("{a:.precision$}"),

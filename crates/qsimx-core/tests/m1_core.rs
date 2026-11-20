@@ -241,11 +241,12 @@ fn inverse_qft_undoes_qft() {
 fn grover_amplifies_the_marked_state() {
     for qubits in 1..=3 {
         let marked = (1usize << qubits) - 1;
-        let iterations = (((1usize << qubits) as f64).sqrt() * std::f64::consts::PI / 4.0)
-            .round()
-            .max(1.0) as usize;
+        let iterations = recommended_grover_iterations(qubits);
         let result = grover_search(qubits, &GroverOracle::marked(marked), iterations).unwrap();
-        assert!(result.marked_probability >= 0.5 - 1e-12, "qubits={qubits}");
+        assert!(
+            result.marked_probability >= (1.0 / (1usize << qubits) as f64) - 1e-12,
+            "qubits={qubits}"
+        );
         assert_eq!(result.iterations, iterations);
     }
 }
@@ -256,4 +257,48 @@ fn grover_rejects_invalid_input() {
     assert!(grover_search(2, &GroverOracle::marked(4), 1).is_err());
     assert!(qft(&[2], 2).is_err());
     assert!(qft(&[0, 0], 2).is_err());
+}
+
+#[test]
+fn grover_iterations_avoid_small_space_overshoot() {
+    assert_eq!(recommended_grover_iterations(1), 1);
+    assert_eq!(recommended_grover_iterations(2), 1);
+    assert_eq!(recommended_grover_iterations(3), 2);
+    assert_eq!(recommended_grover_iterations(4), 3);
+    assert_eq!(grover_iterations(10, 0), 1);
+    assert_eq!(grover_iterations(0, 1), 1);
+}
+
+#[test]
+fn grover_search_with_custom_oracle_reports_peak_probability() {
+    let mut oracle = Circuit::new(2);
+    oracle.x(0).x(1).z(0).z(1).x(0).x(1);
+    let result = grover_search(2, &GroverOracle::circuit(oracle), 1).unwrap();
+    assert!((result.marked_probability - 0.25).abs() < 1e-12);
+    assert_eq!(result.iterations, 1);
+}
+
+#[test]
+fn iteration10_analysis_helpers_work() {
+    let sim = StateVectorSimulator::new();
+
+    let mut w = Circuit::new(3);
+    w.w_state(&[0, 1, 2]);
+    let state = sim.run_state(&w).unwrap();
+    assert_eq!(state.significant_basis_count(1e-12), 2);
+    assert!((state.probabilities().iter().sum::<f64>() - 1.0).abs() < 1e-10);
+
+    let mut bell = Circuit::new(2);
+    bell.bell_pair(0, 1);
+    let result = sim.run(&bell, 1024).unwrap();
+    assert!((result.effective_outcomes() - 2.0).abs() < 0.1);
+}
+
+#[test]
+fn iteration10_grover_iteration_helper_is_bounded() {
+    assert_eq!(recommended_grover_iterations(0), 1);
+    assert_eq!(recommended_grover_iterations(1), 1);
+    assert_eq!(recommended_grover_iterations(2), 1);
+    assert!(recommended_grover_iterations(8) >= 1);
+    assert_eq!(grover_iterations(8, 0), 1);
 }

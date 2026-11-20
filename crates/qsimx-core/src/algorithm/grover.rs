@@ -25,6 +25,28 @@ pub struct GroverResult {
     pub iterations: usize,
 }
 
+
+/// Recommended Grover iteration count for a single marked state.
+///
+/// Clamped to `sqrt(N)` so small search spaces do not overshoot.
+pub fn recommended_grover_iterations(qubits: usize) -> usize {
+    if qubits == 0 {
+        return 1;
+    }
+    grover_iterations(qubits, 1)
+}
+
+/// Iteration count for `solutions` marked states in a `qubits`-bit search space.
+/// Uses `floor(pi/4 * sqrt(N/M))` and never returns zero.
+pub fn grover_iterations(qubits: usize, solutions: usize) -> usize {
+    if qubits == 0 || solutions == 0 {
+        return 1;
+    }
+    let space = 1usize << qubits;
+    let ratio = (space / solutions.max(1)).max(1) as f64;
+    ((std::f64::consts::PI / 4.0) * ratio.sqrt()).floor().max(1.0) as usize
+}
+
 pub fn grover_search(
     qubits: usize,
     oracle: &GroverOracle,
