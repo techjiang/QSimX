@@ -1093,3 +1093,14 @@ fn iteration65_fingerprint_metrics_are_stable_on_ghz_state() {
     let oracle = GroverOracle::marked(0b111);
     assert!((0.0..=1.0).contains(&grover_peak_width_ratio(3, &oracle, 6, 0.5).unwrap()));
 }
+
+#[test]
+fn iteration66_zero_one_balance_is_bounded() {
+    let zero = StateVector::zero(2).unwrap();
+    assert!(zero.zero_one_balance().abs() < 1e-12);
+
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).h(1);
+    let uniform = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((uniform.zero_one_balance() - 1.0).abs() < 1e-12);
+}

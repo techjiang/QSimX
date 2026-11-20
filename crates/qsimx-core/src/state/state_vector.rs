@@ -695,6 +695,19 @@ impl StateVector {
             .max(0.0)
     }
 
+    /// Balance between |0> and |1> outcomes across all qubits, in `[0, 1]`.
+    /// Returns 1 when every qubit is perfectly balanced; 0 for a basis state.
+    pub fn zero_one_balance(&self) -> f64 {
+        if self.qubits == 0 {
+            return 0.0;
+        }
+        (0..self.qubits)
+            .filter_map(|qubit| self.zero_probability(qubit).ok())
+            .map(|p_zero| 2.0 * (p_zero * (1.0 - p_zero)).sqrt())
+            .sum::<f64>()
+            / self.qubits as f64
+    }
+
     /// Jensen-Shannon divergence between the measurement distribution and the uniform baseline.
     pub fn uniformity_divergence(&self) -> f64 {
         let probabilities: Vec<f64> = self
