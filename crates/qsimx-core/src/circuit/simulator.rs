@@ -83,9 +83,10 @@ impl SimulationResult {
             .values()
             .map(|&count| {
                 let p = count as f64 / self.shots as f64;
-                (p * p).log2()
+                p * p
             })
             .sum::<f64>()
+            .log2()
     }
 
     /// Highest-frequency measurement outcomes.
