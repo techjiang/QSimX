@@ -195,3 +195,72 @@ fn iteration9_most_likely_reports_dominant_outcome() {
     let result = sim.run(&circuit, 256).unwrap();
     assert_eq!(result.most_likely(), Some((1, 1.0)));
 }
+
+#[test]
+fn qft_maps_computational_basis_to_product_phases() {
+    let sim = StateVectorSimulator::new();
+    let targets = [0, 1];
+    let q = qft(&targets, 2).unwrap();
+    assert_eq!(q.circuit.gates().len(), 4);
+
+    let mut input = Circuit::new(2);
+    input.x(1);
+    let basis = sim.run_state(&input).unwrap();
+    let mut expected = basis.clone();
+    for gate in q.circuit.gates() {
+        apply_gate(gate, &mut expected).unwrap();
+    }
+
+    let mut product = StateVector::from_amplitudes(
+        2,
+        vec![
+            Complex::new(0.5, 0.0),
+            Complex::from_polar(0.5, -std::f64::consts::FRAC_PI_2),
+            Complex::ZERO,
+            Complex::ZERO,
+        ],
+    )
+    .unwrap();
+    product.normalize();
+    assert!((expected.fidelity(&product).unwrap() - 1.0).abs() < 1e-10);
+}
+
+#[test]
+fn inverse_qft_undoes_qft() {
+    let sim = StateVectorSimulator::new();
+    let targets = [0, 1, 2];
+    let mut input = Circuit::new(3);
+    input.x(0).h(1).s(2);
+    let original = sim.run_state(&input).unwrap();
+
+    let forward = qft(&targets, 3).unwrap();
+    let mut transformed = original.clone();
+    for gate in forward.circuit.gates() {
+        apply_gate(gate, &mut transformed).unwrap();
+    }
+
+    let inverse = inverse_qft(&targets, 3).unwrap();
+    for gate in inverse.circuit.gates() {
+        apply_gate(gate, &mut transformed).unwrap();
+    }
+    assert!((transformed.fidelity(&original).unwrap() - 1.0).abs() < 1e-10);
+}
+
+#[test]
+fn grover_amplifies_the_marked_state() {
+    for qubits in 1..=3 {
+        let marked = (1usize << qubits) - 1;
+        let iterations = ((1usize << qubits) as f64).sqrt().floor() as usize;
+        let result = grover_search(qubits, &GroverOracle::marked(marked), iterations).unwrap();
+        assert!(result.marked_probability > 0.5, "qubits={qubits}");
+        assert_eq!(result.iterations, iterations);
+    }
+}
+
+#[test]
+fn grover_rejects_invalid_input() {
+    assert!(grover_search(0, &GroverOracle::marked(0), 1).is_err());
+    assert!(grover_search(2, &GroverOracle::marked(4), 1).is_err());
+    assert!(qft(&[2], 2).is_err());
+    assert!(qft(&[0, 0], 2).is_err());
+}

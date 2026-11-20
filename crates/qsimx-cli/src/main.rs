@@ -1,6 +1,8 @@
 use std::env;
 
-use qsimx::prelude::{Circuit, StateVectorSimulator};
+use qsimx::prelude::{
+    grover_search, qft, Circuit, GroverOracle, StateVectorSimulator,
+};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -31,6 +33,14 @@ fn main() {
             run_inspect(qubits);
         }
         "summary9" => run_summary9(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(2)),
+        "grover-m2" => {
+            let qubits = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
+            run_grover_m2(qubits);
+        }
+        "qft-m2" => {
+            let qubits = args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3);
+            run_qft_m2(qubits);
+        }
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
             let mut circuit = Circuit::new(3);
@@ -183,6 +193,45 @@ fn run_summary9(qubits: usize) {
             println!("one probability q0: {:.6}", result.state().one_probability(0).unwrap());
             println!("most likely: {:?}", result.most_likely());
             println!("qasm names: {:?}", circuit.gates().iter().map(|g| g.qasm_name()).collect::<Vec<_>>());
+        }
+        Err(err) => eprintln!("error: {err}"),
+    }
+}
+
+fn run_grover_m2(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: qubits must be at least 1");
+        return;
+    }
+    let marked = (1usize << qubits) - 1;
+    let iterations = ((1usize << qubits) as f64).sqrt().floor() as usize;
+    match grover_search(qubits, &GroverOracle::marked(marked), iterations) {
+        Ok(result) => {
+            println!("algorithm: grover");
+            println!("qubits: {qubits}");
+            println!("marked: {marked:0width$b}", width = qubits);
+            println!("iterations: {}", result.iterations);
+            println!("gates: {}", result.circuit.gates().len());
+            println!("marked_probability: {:.6}", result.marked_probability);
+            println!("
+circuit:\n{}", result.circuit.diagram());
+        }
+        Err(err) => eprintln!("error: {err}"),
+    }
+}
+
+fn run_qft_m2(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: qubits must be at least 1");
+        return;
+    }
+    let targets: Vec<usize> = (0..qubits).collect();
+    match qft(&targets, qubits) {
+        Ok(result) => {
+            println!("algorithm: qft");
+            println!("qubits: {qubits}");
+            println!("gates: {}", result.circuit.gates().len());
+            println!("\ncircuit:\n{}", result.circuit.diagram());
         }
         Err(err) => eprintln!("error: {err}"),
     }

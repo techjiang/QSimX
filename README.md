@@ -78,6 +78,27 @@ cargo test --workspace
 cargo run -p qsimx-cli -- summary9 2
 ```
 
+
+## M2：Grover / QFT 完整实现
+
+本轮先把开放 PR 收敛：PR #10 关闭并指向更高版本分支，PR #11 合并到当前基线。随后把 M2 的两个核心算法补成库级 API：
+
+- `qft(targets, qubits)` 与 `inverse_qft(targets, qubits)` 返回真实电路和终态
+- `grover_search(qubits, oracle, iterations)` 支持标记态 oracle 与自定义电路 oracle
+- `GroverOracle::marked()` 构造单解 oracle，扩散算子由精确 QFT 组合生成
+- CLI 增加 `grover-m2` / `qft-m2`，输出门数、标记态概率和电路图
+- 集成测试覆盖 QFT 基态映射、QFT 逆变换、Grover 放大与非法输入
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -p qsimx-cli -- grover-m2 3
+cargo run -p qsimx-cli -- qft-m2 3
+```
+
+当前环境若没有 Rust 工具链，上述命令需在 Rust 2024 环境中执行；截图只展示真实执行过的命令输出。
+
 ## Rust 示例
 
 ```rust
