@@ -346,3 +346,13 @@ pub enum GroverError {
     #[error(transparent)]
     Simulator(#[from] SimulatorError),
 }
+
+/// Mean Grover success probability normalized by the theoretical peak of one.
+pub fn grover_normalized_success_area(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> GroverAnalysisResult<f64> {
+    let curve = grover_success_curve(qubits, oracle, max_iterations)?;
+    Ok(curve.iter().sum::<f64>() / curve.len() as f64)
+}
