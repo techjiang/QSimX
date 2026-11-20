@@ -26,6 +26,10 @@ pub const S_GATE: [[Complex; 2]; 2] = [
     [Complex::ONE, Complex::ZERO],
     [Complex::ZERO, Complex::new(0.0, 1.0)],
 ];
+pub const SDG_GATE: [[Complex; 2]; 2] = [
+    [Complex::ONE, Complex::ZERO],
+    [Complex::ZERO, Complex::new(0.0, -1.0)],
+];
 pub const T_GATE: [[Complex; 2]; 2] = [
     [Complex::ONE, Complex::ZERO],
     [Complex::ZERO, Complex::new(FRAC_1_SQRT_2, FRAC_1_SQRT_2)],
@@ -38,6 +42,7 @@ pub enum Gate {
     Y(usize),
     Z(usize),
     S(usize),
+    SDG(usize),
     T(usize),
     RX(usize, f64),
     RY(usize, f64),
@@ -84,6 +89,7 @@ impl Gate {
             Gate::Y(_) => "Y",
             Gate::Z(_) => "Z",
             Gate::S(_) => "S",
+            Gate::SDG(_) => "SDG",
             Gate::T(_) => "T",
             Gate::RX(_, _) => "RX",
             Gate::RY(_, _) => "RY",
@@ -105,6 +111,7 @@ impl Gate {
             Gate::Y(_) => "y",
             Gate::Z(_) => "z",
             Gate::S(_) => "s",
+            Gate::SDG(_) => "sdg",
             Gate::T(_) => "t",
             Gate::RX(_, _) => "rx",
             Gate::RY(_, _) => "ry",
@@ -125,6 +132,7 @@ impl Gate {
             | Gate::Y(q)
             | Gate::Z(q)
             | Gate::S(q)
+            | Gate::SDG(q)
             | Gate::T(q)
             | Gate::RX(q, _)
             | Gate::RY(q, _)
@@ -144,6 +152,7 @@ impl Gate {
             Gate::Y(q) => format!("y q[{q}];"),
             Gate::Z(q) => format!("z q[{q}];"),
             Gate::S(q) => format!("s q[{q}];"),
+            Gate::SDG(q) => format!("sdg q[{q}];"),
             Gate::T(q) => format!("t q[{q}];"),
             Gate::RX(q, theta) => format!("rx({}) q[{q}];", angle(theta)),
             Gate::RY(q, theta) => format!("ry({}) q[{q}];", angle(theta)),
@@ -164,6 +173,7 @@ impl Gate {
             Gate::Y(q) => state.apply_1q(q, PAULI_Y),
             Gate::Z(q) => state.apply_1q(q, PAULI_Z),
             Gate::S(q) => state.apply_1q(q, S_GATE),
+            Gate::SDG(q) => state.apply_1q(q, SDG_GATE),
             Gate::T(q) => state.apply_1q(q, T_GATE),
             Gate::RX(q, theta) => state.apply_1q(q, rx_matrix(theta)),
             Gate::RY(q, theta) => state.apply_1q(q, ry_matrix(theta)),

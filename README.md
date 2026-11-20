@@ -35,6 +35,7 @@ cargo run -p qsimx-cli -- grover 3 1024
 cargo run -p qsimx-cli -- qft 3 1024
 cargo run -p qsimx-cli -- inspect 3
 cargo run -p qsimx-cli -- summary9 2
+cargo run -p qsimx-cli -- analyze 3
 cargo run -p qsimx-cli -- version
 ```
 

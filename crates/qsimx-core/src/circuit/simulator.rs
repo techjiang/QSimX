@@ -68,6 +68,30 @@ impl SimulationResult {
         Ok(self.state.fidelity(other_state)?)
     }
 
+    /// Empirical probability of one measurement outcome.
+    pub fn probability_by_state(&self, state: usize) -> f64 {
+        if self.shots == 0 {
+            return 0.0;
+        }
+        self.counts.get(&state).copied().unwrap_or(0) as f64 / self.shots as f64
+    }
+
+    /// Renyi entropy with alpha = 2, also called collision entropy.
+    pub fn min_entropy(&self) -> f64 {
+        if self.shots == 0 {
+            return 0.0;
+        }
+        -self
+            .counts
+            .values()
+            .map(|&count| {
+                let p = count as f64 / self.shots as f64;
+                p * p
+            })
+            .sum::<f64>()
+            .log2()
+    }
+
     /// Highest-frequency measurement outcomes.
     pub fn top_counts(&self, limit: usize) -> Vec<(usize, usize)> {
         let mut counts: Vec<_> = self.counts.iter().map(|(&k, &v)| (k, v)).collect();
