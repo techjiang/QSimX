@@ -262,3 +262,18 @@ cargo run -q -p qsimx-cli -- verify-m2-balance 3
 cargo test --workspace
 cargo run -q -p qsimx-cli -- verify-m2-parity 3
 ```
+
+## 第十九轮迭代
+
+1. 新增 `StateVector::collision_probability()`，计算两次独立测量落入同一基态的概率。
+2. 新增 `StateVector::participation_ratio()`，给出有效测量结果数量。
+3. 新增 `Circuit::parameterized_gate_count()`，统计依赖连续角度参数的门数量。
+4. CLI 新增 `verify-m2-diagnostics`，集中展示 Grover 峰值、QFT 对称性与 Bell 态统计。
+5. 补充 2 项回归测试，覆盖基态/均匀态与参数门计数。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-diagnostics 3
+```

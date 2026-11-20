@@ -236,6 +236,19 @@ impl Circuit {
         self.distinct_touching_qubits().len()
     }
 
+    /// Number of gates whose definition depends on a continuous angle.
+    pub fn parameterized_gate_count(&self) -> usize {
+        self.gates
+            .iter()
+            .filter(|gate| {
+                matches!(
+                    gate,
+                    Gate::RX(_, _) | Gate::RY(_, _) | Gate::RZ(_, _) | Gate::CP(_, _, _)
+                )
+            })
+            .count()
+    }
+
     pub fn max_gates_per_qubit(&self) -> usize {
         let mut counts = vec![0usize; self.qubits];
         for gate in &self.gates {

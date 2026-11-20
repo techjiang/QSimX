@@ -28,6 +28,8 @@ pub struct GroverResult {
 /// Recommended Grover iteration count for a single marked state.
 ///
 /// Clamped to `sqrt(N)` so small search spaces do not overshoot.
+pub type GroverAnalysisResult<T> = Result<T, GroverError>;
+
 pub fn recommended_grover_iterations(qubits: usize) -> usize {
     if qubits == 0 {
         return 1;

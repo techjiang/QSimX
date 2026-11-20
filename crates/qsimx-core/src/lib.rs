@@ -7,11 +7,13 @@ pub mod state;
 pub mod prelude {
     pub use crate::VERSION;
     pub use crate::algorithm::{
-        GroverOracle, GroverResult, QftResult, QftRoundTripError, grover_amplification_gain,
-        grover_iterations, grover_recommended_gain, grover_search, grover_success_cumulative,
+        GroverAnalysisResult, GroverError, GroverOracle, GroverResult, QftResult,
+        QftRoundTripError, grover_amplification_gain, grover_iterations, grover_peak_delta,
+        grover_peak_iteration, grover_recommended_gain, grover_search, grover_success_cumulative,
         grover_success_curve, inverse_qft, qft, qft_average_probability, qft_density_balance,
         qft_density_gap, qft_gate_balance, qft_gate_density, qft_gate_symmetry,
-        qft_roundtrip_fidelity, qft_sparsity, recommended_grover_iterations,
+        qft_pair_is_reversible, qft_probability_imbalance, qft_roundtrip_fidelity, qft_sparsity,
+        recommended_grover_iterations,
     };
     pub use crate::circuit::{
         Circuit, QasmError, SimulationResult, SimulatorError, StateVectorSimulator, apply_gate,

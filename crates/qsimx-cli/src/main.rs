@@ -2,9 +2,10 @@ use std::env;
 
 use qsimx::prelude::{
     Circuit, Gate, GroverOracle, StateVector, StateVectorSimulator, grover_amplification_gain,
-    grover_recommended_gain, grover_search, grover_success_cumulative, grover_success_curve,
-    inverse_qft, qft, qft_average_probability, qft_density_balance, qft_density_gap,
-    qft_gate_balance, qft_gate_density, qft_gate_symmetry, qft_roundtrip_fidelity, qft_sparsity,
+    grover_peak_delta, grover_peak_iteration, grover_recommended_gain, grover_search,
+    grover_success_cumulative, grover_success_curve, inverse_qft, qft, qft_average_probability,
+    qft_density_balance, qft_density_gap, qft_gate_balance, qft_gate_density, qft_gate_symmetry,
+    qft_pair_is_reversible, qft_probability_imbalance, qft_roundtrip_fidelity, qft_sparsity,
     recommended_grover_iterations,
 };
 
@@ -75,6 +76,9 @@ fn main() {
         }
         "verify-m2-parity" => {
             run_verify_m2_parity(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
+        }
+        "verify-m2-diagnostics" => {
+            run_verify_m2_diagnostics(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
         }
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
@@ -869,6 +873,94 @@ fn run_verify_m2_parity(qubits: usize) {
     println!("circuit depth: {}", grover.circuit.depth());
 }
 
+fn run_verify_m2_diagnostics(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: verify-m2-diagnostics needs at least 1 qubit");
+        return;
+    }
+    let marked = (1usize << qubits) - 1;
+    let oracle = GroverOracle::marked(marked);
+    let targets: Vec<usize> = (0..qubits).collect();
+
+    let peak = match grover_peak_iteration(qubits, &oracle, 4) {
+        Ok(peak) => peak,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let peak_delta = match grover_peak_delta(qubits, &oracle, 4) {
+        Ok(delta) => delta,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let forward = match qft(&targets, qubits) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let inverse = match inverse_qft(&targets, qubits) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let input = match StateVector::zero(qubits) {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+
+    let mut bell = Circuit::new(2);
+    bell.bell_pair(0, 1);
+    let bell_state = match StateVectorSimulator::new().run_state(&bell) {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let result = match StateVectorSimulator::new().run(&bell, 512) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+
+    println!("qubits: {qubits}");
+    println!("grover peak iteration: {peak}");
+    println!("grover peak delta: {peak_delta}");
+    println!(
+        "qft probability imbalance: {:.6}",
+        qft_probability_imbalance(&forward, &inverse)
+    );
+    println!(
+        "qft reversible pair: {}",
+        qft_pair_is_reversible(&forward, &inverse, &input)
+    );
+    println!(
+        "bell parameterized gates: {}",
+        bell.parameterized_gate_count()
+    );
+    println!(
+        "bell collision probability: {:.6}",
+        bell_state.collision_probability()
+    );
+    println!(
+        "bell participation ratio: {:.6}",
+        bell_state.participation_ratio()
+    );
+    println!("bell shannon entropy: {:.6} bits", result.shannon_entropy());
+}
+
 fn run(circuit: &Circuit, shots: usize) {
     match StateVectorSimulator::new().run(circuit, shots) {
         Ok(result) => {
@@ -901,6 +993,6 @@ fn run(circuit: &Circuit, shots: usize) {
 
 fn print_usage() {
     println!(
-        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli verify-m2-report [qubits]\n  qsimx-cli verify-m2-cond [qubits]\n  qsimx-cli verify-m2-dist [qubits]\n  qsimx-cli verify-m2-balance [qubits]\n  qsimx-cli verify-m2-parity [qubits]\n  qsimx-cli version\n"
+        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli verify-m2-report [qubits]\n  qsimx-cli verify-m2-cond [qubits]\n  qsimx-cli verify-m2-dist [qubits]\n  qsimx-cli verify-m2-balance [qubits]\n  qsimx-cli verify-m2-parity [qubits]\n  qsimx-cli verify-m2-diagnostics [qubits]\n  qsimx-cli version\n"
     );
 }

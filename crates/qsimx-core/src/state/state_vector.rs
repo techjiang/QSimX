@@ -411,6 +411,24 @@ impl StateVector {
             .fold(0.0_f64, f64::max)
     }
 
+    /// Probability that two independently prepared copies collapse to the same basis state.
+    pub fn collision_probability(&self) -> f64 {
+        self.amplitudes
+            .iter()
+            .map(|amplitude| amplitude.norm_sqr().powi(2))
+            .sum()
+    }
+
+    /// Effective number of outcomes, defined as the inverse collision probability.
+    pub fn participation_ratio(&self) -> f64 {
+        let collision = self.collision_probability();
+        if collision <= f64::EPSILON {
+            0.0
+        } else {
+            1.0 / collision
+        }
+    }
+
     pub fn cumulative_probabilities(&self) -> Vec<f64> {
         let mut cumulative = 0.0;
         self.amplitudes

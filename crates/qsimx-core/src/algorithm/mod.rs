@@ -1,10 +1,14 @@
+mod diagnostics;
 mod grover;
 mod qft;
 
+pub use diagnostics::{
+    grover_peak_delta, grover_peak_iteration, qft_pair_is_reversible, qft_probability_imbalance,
+};
 pub use grover::{
-    GroverOracle, GroverResult, grover_amplification_gain, grover_iterations,
-    grover_recommended_gain, grover_search, grover_success_cumulative, grover_success_curve,
-    recommended_grover_iterations,
+    GroverAnalysisResult, GroverError, GroverOracle, GroverResult, grover_amplification_gain,
+    grover_iterations, grover_recommended_gain, grover_search, grover_success_cumulative,
+    grover_success_curve, recommended_grover_iterations,
 };
 pub use qft::{
     QftResult, QftRoundTripError, inverse_qft, qft, qft_average_probability, qft_density_balance,

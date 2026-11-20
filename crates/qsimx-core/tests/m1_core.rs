@@ -612,3 +612,93 @@ fn iteration18_parity_cli_metrics_are_stable() {
     assert!((odd - 0.5).abs() < 1e-12);
     assert!((even - 0.5).abs() < 1e-12);
 }
+
+#[test]
+fn iteration19_collision_and_participation_ratio_work() {
+    let sim = StateVectorSimulator::new();
+
+    let mut basis = Circuit::new(1);
+    let basis_state = sim.run_state(&basis).unwrap();
+    assert!((basis_state.collision_probability() - 1.0).abs() < 1e-12);
+    assert!((basis_state.participation_ratio() - 1.0).abs() < 1e-12);
+
+    basis.h(0);
+    let uniform = sim.run_state(&basis).unwrap();
+    assert!((uniform.collision_probability() - 0.5).abs() < 1e-12);
+    assert!((uniform.participation_ratio() - 2.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration19_parameterized_gate_count_tracks_angles() {
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).rx(0, 0.1).ry(1, 0.2).cp(0, 1, 0.3);
+    assert_eq!(circuit.parameterized_gate_count(), 3);
+
+    let mut plain = Circuit::new(2);
+    plain.h(0).cnot(0, 1);
+    assert_eq!(plain.parameterized_gate_count(), 0);
+}
+
+#[test]
+fn iteration20_grover_peak_analysis_finds_expected_iteration() {
+    let oracle = GroverOracle::marked(0b11);
+    assert_eq!(grover_peak_iteration(2, &oracle, 4).unwrap(), 2);
+    assert_eq!(grover_peak_delta(2, &oracle, 4).unwrap(), -1);
+}
+
+#[test]
+fn iteration20_grover_peak_analysis_rejects_empty_search() {
+    let oracle = GroverOracle::marked(0);
+    assert!(grover_peak_iteration(0, &oracle, 2).is_err());
+}
+
+#[test]
+fn iteration21_qft_probability_imbalance_is_zero_for_inverse_pair() {
+    let targets = [0, 1, 2];
+    let forward = qft(&targets, 3).unwrap();
+    let inverse = inverse_qft(&targets, 3).unwrap();
+    assert!(qft_probability_imbalance(&forward, &inverse) < 1e-12);
+}
+
+#[test]
+fn iteration21_qft_pair_reversibility_checks_roundtrip() {
+    let targets = [0, 1];
+    let forward = qft(&targets, 2).unwrap();
+    let inverse = inverse_qft(&targets, 2).unwrap();
+    let input = StateVector::zero(2).unwrap();
+
+    assert!(qft_pair_is_reversible(&forward, &inverse, &input));
+}
+
+#[test]
+fn iteration22_verify_metrics_are_stable_on_bell_state() {
+    let sim = StateVectorSimulator::new();
+    let mut circuit = Circuit::new(2);
+    circuit.bell_pair(0, 1);
+    let state = sim.run_state(&circuit).unwrap();
+    let result = sim.run(&circuit, 512).unwrap();
+
+    assert_eq!(circuit.parameterized_gate_count(), 0);
+    assert!((state.collision_probability() - 0.5).abs() < 1e-12);
+    assert!((state.participation_ratio() - 2.0).abs() < 1e-12);
+    assert!((result.shannon_entropy() - 1.0).abs() < 0.05);
+}
+
+#[test]
+fn iteration22_verify_metrics_reject_mismatched_qft_states() {
+    let forward = qft(&[0, 1], 2).unwrap();
+    let inverse = inverse_qft(&[0, 1], 2).unwrap();
+    let mut other = inverse.state.clone();
+    other.amplitudes_mut()[0].re += 0.1;
+    other.normalize();
+
+    let imbalance = forward
+        .state
+        .probabilities()
+        .iter()
+        .zip(other.probabilities().iter())
+        .map(|(a, b)| (a - b).abs())
+        .fold(0.0_f64, f64::max);
+    assert!(imbalance > 0.0);
+    assert!(qft_probability_imbalance(&forward, &inverse) < 1e-12);
+}
