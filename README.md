@@ -35,6 +35,7 @@ cargo run -p qsimx-cli -- grover 3 1024
 cargo run -p qsimx-cli -- qft 3 1024
 cargo run -p qsimx-cli -- inspect 3
 cargo run -p qsimx-cli -- summary9 2
+cargo run -p qsimx-cli -- analyze 3
 cargo run -p qsimx-cli -- version
 ```
 
@@ -76,6 +77,21 @@ cargo run -p qsimx-cli -- standard 3
 ```bash
 cargo test --workspace
 cargo run -p qsimx-cli -- summary9 2
+```
+
+## 第十轮迭代
+
+1. `SimulationResult::probability_by_state()` 与 `min_entropy()`（Renyi-2 碰撞熵）
+2. `StateVector::expectation_z()` 直接读取 Pauli Z 期望值
+3. 新增 `SDG` 门及 `Circuit::sdg()`，支持 QASM `sdg`
+4. CLI 新增 `analyze` 命令，集中展示电路指标
+5. 补齐 5 项回归测试，累计 18 项测试通过
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -p qsimx-cli -- analyze 3
 ```
 
 ## Rust 示例
