@@ -828,3 +828,15 @@ fn iteration35_distinct_touching_qubit_count_skips_idle_qubits() {
     assert_eq!(circuit.distinct_touching_qubit_count(), 2);
     assert_eq!(Circuit::new(3).distinct_touching_qubit_count(), 0);
 }
+
+#[test]
+fn iteration36_max_probability_matches_inverse_dimension() {
+    let basis = StateVector::zero(2).unwrap();
+    assert!((basis.max_probability() - 1.0).abs() < 1e-12);
+
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).h(1);
+    let uniform = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((uniform.max_probability() - 0.25).abs() < 1e-12);
+    assert!((uniform.inverse_max_probability() - 4.0).abs() < 1e-12);
+}

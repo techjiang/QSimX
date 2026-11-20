@@ -462,13 +462,17 @@ impl StateVector {
         (self.shannon_entropy() / qubits).min(1.0)
     }
 
-    /// Effective dimension from the largest basis-state probability.
-    pub fn inverse_max_probability(&self) -> f64 {
-        let largest = self
-            .amplitudes
+    /// Largest basis-state probability.
+    pub fn max_probability(&self) -> f64 {
+        self.amplitudes
             .iter()
             .map(|amplitude| amplitude.norm_sqr())
-            .fold(0.0_f64, f64::max);
+            .fold(0.0_f64, f64::max)
+    }
+
+    /// Effective dimension from the largest basis-state probability.
+    pub fn inverse_max_probability(&self) -> f64 {
+        let largest = self.max_probability();
         if largest <= f64::EPSILON {
             0.0
         } else {
