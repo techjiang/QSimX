@@ -788,3 +788,11 @@ fn iteration30_parameterized_gate_ratio_tracks_angle_gates() {
     assert!((circuit.parameterized_gate_ratio() - 0.5).abs() < 1e-12);
     assert!((Circuit::new(1).parameterized_gate_ratio() - 0.0).abs() < 1e-12);
 }
+
+#[test]
+fn iteration31_grover_success_area_stays_bounded() {
+    let oracle = GroverOracle::marked(0b11);
+    let area = grover_success_area(2, &oracle, 4).unwrap();
+    assert!(area > 0.0 && area <= 1.0);
+    assert!(grover_success_area(0, &oracle, 1).is_err());
+}

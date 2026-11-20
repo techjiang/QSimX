@@ -94,3 +94,13 @@ pub fn grover_peak_step(
         .map(|pair| (pair[1] - pair[0]).abs())
         .fold(0.0_f64, f64::max))
 }
+
+/// Time-averaged marked-state probability over all Grover iterations up to `max_iterations`.
+pub fn grover_success_area(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> GroverAnalysisResult<f64> {
+    let curve = crate::algorithm::grover_success_curve(qubits, oracle, max_iterations)?;
+    Ok(curve.iter().sum::<f64>() / curve.len() as f64)
+}
