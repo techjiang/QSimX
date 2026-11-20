@@ -950,3 +950,54 @@ fn iteration50_state_and_circuit_statistics_work() {
     assert_eq!(bell_state.effective_outcomes(), 2);
     assert_eq!(bell.one_and_two_qubit_gate_count(), 2);
 }
+
+#[test]
+fn iteration50b_profile_exports_are_available() {
+    let zero = StateVector::zero(2).unwrap();
+    let _ = zero.peak_concentration();
+    let _ = Circuit::new(2).gate_width_entropy();
+    let _ = qft_phase_circular_variance(&qft(&[0, 1], 2).unwrap());
+    let _ = grover_success_skewness(2, &GroverOracle::marked(0b11), 2);
+}
+
+#[test]
+fn iteration51_peak_concentration_is_bounded() {
+    let zero = StateVector::zero(3).unwrap();
+    assert!((zero.peak_concentration() - 8.0).abs() < 1e-12);
+    let mut bell = Circuit::new(2);
+    bell.h(0).cnot(0, 1);
+    let state = StateVectorSimulator::new().run_state(&bell).unwrap();
+    assert!((state.peak_concentration() - 2.0).abs() < 1e-12);
+}
+
+#[test]
+fn iteration52_gate_width_entropy_reflects_mixed_widths() {
+    let mut circuit = Circuit::new(2);
+    circuit.h(0).cnot(0, 1);
+    assert!((circuit.gate_width_entropy() - 1.0).abs() < 1e-12);
+    assert!(Circuit::new(2).gate_width_entropy().abs() < 1e-12);
+}
+
+#[test]
+fn iteration53_grover_success_skewness_is_finite() {
+    let oracle = GroverOracle::marked(0b11);
+    let skewness = grover_success_skewness(2, &oracle, 5).unwrap();
+    assert!(skewness.is_finite());
+    assert!(grover_success_skewness(0, &oracle, 2).is_err());
+}
+
+#[test]
+fn iteration54_qft_phase_circular_variance_is_bounded() {
+    let result = qft(&[0, 1, 2], 3).unwrap();
+    let variance = qft_phase_circular_variance(&result);
+    assert!((0.0..=1.0).contains(&variance));
+}
+
+#[test]
+fn iteration55_profile_statistics_are_stable() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).cnot(0, 1).cnot(0, 2);
+    let state = StateVectorSimulator::new().run_state(&circuit).unwrap();
+    assert!((state.peak_concentration() - 4.0).abs() < 1e-12);
+    assert!((circuit.gate_width_entropy() - 0.9182958340544896).abs() < 1e-12);
+}

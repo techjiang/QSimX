@@ -375,3 +375,18 @@ cargo run -q -p qsimx-cli -- verify-m2-stats 3
 ```
 
 本机使用 Rust 1.100 与 GCC 12.2 真实执行；`cargo test --workspace` 89/89 通过。截图见 `qsimx_iter13.png`。
+
+## 第二十四轮迭代（本轮 5 次更新）
+
+1. `StateVector::peak_concentration()`：最大基态概率与状态维度乘积。
+2. `Circuit::gate_width_entropy()`：按门宽度分布计算的香农熵。
+3. `grover_success_skewness()`：Grover 成功率曲线的三阶标准化矩。
+4. `qft_phase_circular_variance()`：非零傅里叶模式相位的圆方差。
+5. CLI 新增 `verify-m2-profile [qubits]`，补充 5 项回归测试与 README 记录。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-profile 3
+```

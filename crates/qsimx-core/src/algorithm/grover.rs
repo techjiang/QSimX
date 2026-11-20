@@ -70,10 +70,7 @@ pub fn grover_success_path_length(
     max_iterations: usize,
 ) -> Result<f64, GroverError> {
     let curve = grover_success_curve(qubits, oracle, max_iterations)?;
-    Ok(curve
-        .windows(2)
-        .map(|pair| (pair[1] - pair[0]).abs())
-        .sum())
+    Ok(curve.windows(2).map(|pair| (pair[1] - pair[0]).abs()).sum())
 }
 
 /// Amplification gain over the uniform prior for a single marked state.
@@ -110,6 +107,22 @@ pub fn grover_recommended_gain(qubits: usize, oracle: &GroverOracle) -> Result<f
     let final_probability =
         grover_search(qubits, oracle, recommended_grover_iterations(qubits))?.marked_probability;
     Ok(final_probability - initial)
+}
+
+/// Skewness of the Grover success probabilities across the evaluated iterations.
+pub fn grover_success_skewness(
+    qubits: usize,
+    oracle: &GroverOracle,
+    max_iterations: usize,
+) -> Result<f64, GroverError> {
+    let curve = grover_success_curve(qubits, oracle, max_iterations)?;
+    let mean = curve.iter().sum::<f64>() / curve.len() as f64;
+    let moment2 = curve.iter().map(|p| (p - mean).powi(2)).sum::<f64>() / curve.len() as f64;
+    if moment2 <= f64::EPSILON {
+        return Ok(0.0);
+    }
+    let moment3 = curve.iter().map(|p| (p - mean).powi(3)).sum::<f64>() / curve.len() as f64;
+    Ok(moment3 / moment2.powf(1.5))
 }
 
 pub fn grover_search(

@@ -467,7 +467,10 @@ impl StateVector {
         if probabilities.len() < 2 {
             return 0.0;
         }
-        probabilities.windows(2).map(|p| (p[0] - p[1]).abs()).sum::<f64>()
+        probabilities
+            .windows(2)
+            .map(|p| (p[0] - p[1]).abs())
+            .sum::<f64>()
             / (probabilities.len() - 1) as f64
     }
 
@@ -489,6 +492,15 @@ impl StateVector {
             .iter()
             .map(|amplitude| amplitude.norm_sqr())
             .fold(0.0_f64, f64::max)
+    }
+
+    /// Peak concentration of the measurement distribution: `max(p) * dimension`.
+    pub fn peak_concentration(&self) -> f64 {
+        let dimension = self.amplitudes.len();
+        if dimension == 0 {
+            return 0.0;
+        }
+        self.max_probability() * dimension as f64
     }
 
     /// Effective dimension from the largest basis-state probability.

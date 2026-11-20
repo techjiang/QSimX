@@ -158,6 +158,27 @@ pub fn qft_adjacent_phase_step(result: &QftResult) -> f64 {
         / std::f64::consts::PI
 }
 
+/// Circular variance of nonzero Fourier-mode phases, in `[0, 1]`.
+pub fn qft_phase_circular_variance(result: &QftResult) -> f64 {
+    let mut cos_sum = 0.0;
+    let mut sin_sum = 0.0;
+    let mut count = 0usize;
+    for amplitude in result.state.amplitudes() {
+        if amplitude.norm_sqr() <= f64::EPSILON {
+            continue;
+        }
+        let phase = amplitude.arg();
+        cos_sum += phase.cos();
+        sin_sum += phase.sin();
+        count += 1;
+    }
+    if count == 0 {
+        return 0.0;
+    }
+    let mean = (cos_sum / count as f64).hypot(sin_sum / count as f64);
+    (1.0 - mean).clamp(0.0, 1.0)
+}
+
 /// Fidelity between the QFT output and the inverse-QFT output of a state.
 pub fn qft_roundtrip_fidelity(
     targets: &[usize],

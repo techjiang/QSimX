@@ -286,6 +286,22 @@ impl Circuit {
             .count()
     }
 
+    /// Shannon entropy of the distribution of gate widths, in bits.
+    pub fn gate_width_entropy(&self) -> f64 {
+        if self.gates.is_empty() {
+            return 0.0;
+        }
+        let total = self.gates.len() as f64;
+        (1..=3)
+            .map(|width| self.gates_with_arity(width))
+            .filter(|&count| count > 0)
+            .map(|count| {
+                let probability = count as f64 / total;
+                -probability * probability.log2()
+            })
+            .sum()
+    }
+
     /// Number of gates acting on exactly one qubit plus gates acting on exactly two.
     pub fn one_and_two_qubit_gate_count(&self) -> usize {
         self.gates_with_arity(1) + self.gates_with_arity(2)
