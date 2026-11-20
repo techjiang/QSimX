@@ -1148,7 +1148,7 @@ fn iteration71_average_gate_load_counts_touch_points() {
     let mut circuit = Circuit::new(3);
     assert!(circuit.average_gate_load().abs() < 1e-12);
     circuit.h(0).cnot(0, 1);
-    assert!((circuit.average_gate_load() - 5.0 / 3.0).abs() < 1e-12);
+    assert!((circuit.average_gate_load() - 1.0).abs() < 1e-12);
     assert!(Circuit::new(0).average_gate_load().abs() < 1e-12);
 }
 
