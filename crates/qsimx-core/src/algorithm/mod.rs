@@ -14,5 +14,5 @@ pub use grover::{
 pub use qft::{
     QftResult, QftRoundTripError, inverse_qft, qft, qft_average_probability, qft_density_balance,
     qft_density_gap, qft_gate_balance, qft_gate_density, qft_gate_fidelity, qft_gate_symmetry,
-    qft_roundtrip_fidelity, qft_sparsity,
+    qft_phase_balance, qft_roundtrip_fidelity, qft_sparsity,
 };

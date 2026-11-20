@@ -813,3 +813,10 @@ fn iteration33_grover_peak_width_counts_above_target() {
     assert_eq!(grover_peak_width(2, &oracle, 5, 1.1).unwrap(), 0);
     assert!(grover_peak_width(0, &oracle, 2, 0.5).is_err());
 }
+
+#[test]
+fn iteration34_qft_phase_balance_is_bounded() {
+    let result = qft(&[0, 1], 2).unwrap();
+    let balance = qft_phase_balance(&result);
+    assert!((0.0..=1.0).contains(&balance));
+}

@@ -13,8 +13,9 @@ pub mod prelude {
         grover_peak_width, grover_recommended_gain, grover_search, grover_success_area,
         grover_success_cumulative, grover_success_curve, inverse_qft, qft, qft_average_probability,
         qft_density_balance, qft_density_gap, qft_gate_balance, qft_gate_density,
-        qft_gate_fidelity, qft_gate_symmetry, qft_pair_is_reversible, qft_probability_imbalance,
-        qft_roundtrip_fidelity, qft_sparsity, recommended_grover_iterations,
+        qft_gate_fidelity, qft_gate_symmetry, qft_pair_is_reversible, qft_phase_balance,
+        qft_probability_imbalance, qft_roundtrip_fidelity, qft_sparsity,
+        recommended_grover_iterations,
     };
     pub use crate::circuit::{
         Circuit, QasmError, SimulationResult, SimulatorError, StateVectorSimulator, apply_gate,

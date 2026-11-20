@@ -99,6 +99,31 @@ pub fn qft_density_balance(result: &QftResult, inverse: &QftResult) -> f64 {
     (qft_gate_density(result) + qft_gate_density(inverse)) / 2.0
 }
 
+/// Phase symmetry score: `1 - |mean phase of odd modes - mean phase of even modes| / pi`.
+pub fn qft_phase_balance(result: &QftResult) -> f64 {
+    let mut even_sum = 0.0;
+    let mut even_count = 0usize;
+    let mut odd_sum = 0.0;
+    let mut odd_count = 0usize;
+    for (index, amplitude) in result.state.amplitudes().iter().enumerate() {
+        if amplitude.norm_sqr() <= f64::EPSILON {
+            continue;
+        }
+        if index % 2 == 0 {
+            even_sum += amplitude.arg();
+            even_count += 1;
+        } else {
+            odd_sum += amplitude.arg();
+            odd_count += 1;
+        }
+    }
+    if even_count == 0 || odd_count == 0 {
+        return 1.0;
+    }
+    let gap = (even_sum / even_count as f64 - odd_sum / odd_count as f64).abs();
+    (1.0 - gap / std::f64::consts::PI).clamp(0.0, 1.0)
+}
+
 /// Fidelity between the QFT output and the inverse-QFT output of a state.
 pub fn qft_roundtrip_fidelity(
     targets: &[usize],
