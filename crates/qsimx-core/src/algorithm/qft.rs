@@ -101,6 +101,11 @@ pub fn qft_roundtrip_fidelity(
     Ok(state.fidelity(input)?)
 }
 
+/// Difference between QFT gate density and inverse-QFT gate density.
+pub fn qft_density_gap(result: &QftResult, inverse: &QftResult) -> f64 {
+    (qft_gate_density(result) - qft_gate_density(inverse)).abs()
+}
+
 #[derive(Debug, thiserror::Error)]
 pub enum QftRoundTripError {
     #[error(transparent)]

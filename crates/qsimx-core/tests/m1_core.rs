@@ -485,3 +485,42 @@ fn iteration15_qft_gate_symmetry_is_stable() {
     let inverse = inverse_qft(&targets, 3).unwrap();
     assert!((qft_gate_symmetry(&forward, &inverse) - 1.0).abs() < 1e-12);
 }
+
+#[test]
+fn iteration16_jensen_shannon_divergence_bounds() {
+    let mut ghz = Circuit::new(2);
+    ghz.h(0).cnot(0, 1);
+    let ghz_state = StateVectorSimulator::new().run_state(&ghz).unwrap();
+    let other = StateVector::zero(2).unwrap();
+    let jsd = ghz_state.jensen_shannon_divergence(&other).unwrap();
+    assert!(jsd >= 0.0);
+    assert!(jsd <= 1.0);
+    assert!((ghz_state.jensen_shannon_divergence(&ghz_state).unwrap()).abs() < 1e-12);
+    assert!(ghz_state.jensen_shannon_divergence(&StateVector::zero(1).unwrap()).is_err());
+}
+
+#[test]
+fn iteration16_max_gates_per_qubit_tracks_busiest_wire() {
+    let mut circuit = Circuit::new(3);
+    circuit.h(0).h(0).x(1).cnot(0, 2);
+    assert_eq!(circuit.max_gates_per_qubit(), 3);
+    assert_eq!(Circuit::new(3).max_gates_per_qubit(), 0);
+}
+
+#[test]
+fn iteration16_qft_density_gap_is_nonnegative() {
+    let targets = [0usize, 1, 2];
+    let forward = qft(&targets, 3).unwrap();
+    let inverse = inverse_qft(&targets, 3).unwrap();
+    let gap = qft_density_gap(&forward, &inverse);
+    assert!(gap >= 0.0);
+    assert!(gap < 1e-12);
+}
+
+#[test]
+fn iteration16_roundtrip_fidelity_stays_one() {
+    let targets = [0usize, 1, 2];
+    let initial = StateVector::zero(3).unwrap();
+    let fidelity = qft_roundtrip_fidelity(&targets, 3, &initial).unwrap();
+    assert!((fidelity - 1.0).abs() < 1e-10);
+}

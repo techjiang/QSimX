@@ -350,6 +350,32 @@ impl StateVector {
     }
 
     /// Cumulative probability distribution indexed by basis state.
+    /// Jensen-Shannon divergence between two basis-state probability distributions.
+    pub fn jensen_shannon_divergence(&self, other: &StateVector) -> Result<f64, StateVectorError> {
+        if self.qubits != other.qubits {
+            return Err(StateVectorError::WrongLength {
+                expected: self.amplitudes.len(),
+                actual: other.amplitudes.len(),
+            });
+        }
+        let mix = 0.5;
+        let kl = |p: f64, q: f64| {
+            if p <= 0.0 {
+                0.0
+            } else {
+                p * (p / q).log2()
+            }
+        };
+        let mut divergence = 0.0;
+        for (a, b) in self.amplitudes.iter().zip(other.amplitudes.iter()) {
+            let p = a.norm_sqr();
+            let q = b.norm_sqr();
+            let m = mix * p + mix * q;
+            divergence += 0.5 * kl(p, m) + 0.5 * kl(q, m);
+        }
+        Ok(divergence)
+    }
+
     pub fn cumulative_probabilities(&self) -> Vec<f64> {
         let mut cumulative = 0.0;
         self.amplitudes

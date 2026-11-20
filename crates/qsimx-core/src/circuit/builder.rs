@@ -217,6 +217,35 @@ impl Circuit {
         }
     }
 
+    /// Maximum number of gates applied to any qubit.
+    pub fn max_gates_per_qubit(&self) -> usize {
+        let mut counts = vec![0usize; self.qubits];
+        for gate in &self.gates {
+            let indices = match gate {
+                Gate::H(q)
+                | Gate::X(q)
+                | Gate::Y(q)
+                | Gate::Z(q)
+                | Gate::S(q)
+                | Gate::T(q)
+                | Gate::RX(q, _)
+                | Gate::RY(q, _)
+                | Gate::RZ(q, _)
+                | Gate::Custom1(q, _) => vec![*q],
+                Gate::CX(a, b) | Gate::CZ(a, b) | Gate::CP(a, b, _) | Gate::Swap(a, b) => {
+                    vec![*a, *b]
+                }
+                Gate::Toffoli(a, b, c) => vec![*a, *b, *c],
+            };
+            for index in indices {
+                if index < counts.len() {
+                    counts[index] += 1;
+                }
+            }
+        }
+        counts.into_iter().max().unwrap_or(0)
+    }
+
     pub fn diagram(&self) -> String {
         (0..self.qubits)
             .map(|q| {

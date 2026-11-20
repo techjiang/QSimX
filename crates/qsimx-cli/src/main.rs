@@ -3,8 +3,8 @@ use std::env;
 use qsimx::prelude::{
     Circuit, Gate, GroverOracle, StateVector, StateVectorSimulator, grover_amplification_gain,
     grover_search, grover_success_cumulative, grover_success_curve, inverse_qft, qft,
-    qft_average_probability, qft_gate_density, qft_gate_symmetry, qft_roundtrip_fidelity,
-    qft_sparsity, recommended_grover_iterations,
+    qft_average_probability, qft_density_gap, qft_gate_density, qft_gate_symmetry,
+    qft_roundtrip_fidelity, qft_sparsity, recommended_grover_iterations,
 };
 
 fn main() {
@@ -65,6 +65,9 @@ fn main() {
         }
         "verify-m2-cond" => {
             run_verify_m2_cond(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
+        }
+        "verify-m2-dist" => {
+            run_verify_m2_dist(args.get(2).and_then(|s| s.parse().ok()).unwrap_or(3))
         }
         "version" => println!("QSimX {}", qsimx::VERSION),
         "qasm" => {
@@ -653,6 +656,72 @@ fn run_verify_m2_cond(qubits: usize) {
     );
 }
 
+fn run_verify_m2_dist(qubits: usize) {
+    if qubits == 0 {
+        eprintln!("error: qubits must be at least 1");
+        return;
+    }
+    let targets: Vec<usize> = (0..qubits).collect();
+    let marked = (1usize << qubits) - 1;
+    let oracle = GroverOracle::marked(marked);
+    let grover = match grover_search(qubits, &oracle, recommended_grover_iterations(qubits)) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let mut oracle_circuit = Circuit::new(qubits);
+    oracle_circuit.h(0);
+    for target in 1..qubits {
+        oracle_circuit.cnot(0, target);
+    }
+    let oracle_state = match StateVectorSimulator::new().run_state(&oracle_circuit) {
+        Ok(state) => state,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let forward = match qft(&targets, qubits) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let inverse = match inverse_qft(&targets, qubits) {
+        Ok(result) => result,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let jsd = match grover.state.jensen_shannon_divergence(&oracle_state) {
+        Ok(value) => value,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    let roundtrip = match qft_roundtrip_fidelity(&targets, qubits, &grover.state) {
+        Ok(value) => value,
+        Err(err) => {
+            eprintln!("error: {err}");
+            return;
+        }
+    };
+    println!("qubits: {qubits}");
+    println!("grover marked probability: {:.6}", grover.marked_probability);
+    println!("grover iterations: {}", grover.iterations);
+    println!("js divergence(grover, ghz): {:.6}", jsd);
+    println!("total variation distance: {:.6}", grover.state.total_variation_distance(&oracle_state).unwrap_or(1.0));
+    println!("qft roundtrip fidelity: {:.6}", roundtrip);
+    println!("qft density gap: {:.6}", qft_density_gap(&forward, &inverse));
+    println!("max gates per qubit: {}", grover.circuit.max_gates_per_qubit());
+    println!("grover circuit depth: {}", grover.circuit.depth());
+}
+
 fn run(circuit: &Circuit, shots: usize) {
     match StateVectorSimulator::new().run(circuit, shots) {
         Ok(result) => {
@@ -685,6 +754,6 @@ fn run(circuit: &Circuit, shots: usize) {
 
 fn print_usage() {
     println!(
-        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli verify-m2-report [qubits]\n  qsimx-cli verify-m2-cond [qubits]\n  qsimx-cli version\n"
+        "QSimX CLI\n\nUsage:\n  qsimx-cli bell [shots]\n  qsimx-cli ghz [qubits] [shots]\n  qsimx-cli grover [qubits] [shots]\n  qsimx-cli qft [qubits] [shots]\n  qsimx-cli qasm\n  qsimx-cli standard [qubits]\n  qsimx-cli inspect [qubits]\n  qsimx-cli verify-m2 [qubits]\n  qsimx-cli verify-m2-plus [qubits]\n  qsimx-cli verify-m2-final [qubits]\n  qsimx-cli verify-m2-compact [qubits]\n  qsimx-cli verify-m2-report [qubits]\n  qsimx-cli verify-m2-cond [qubits]\n  qsimx-cli verify-m2-dist [qubits]\n  qsimx-cli version\n"
     );
 }

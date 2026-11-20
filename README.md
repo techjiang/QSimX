@@ -216,3 +216,18 @@ cargo run -p qsimx-cli -- verify-m2-report 3
 cargo test --workspace
 cargo run -q -p qsimx-cli -- verify-m2-cond 3
 ```
+
+## 第十六轮迭代
+
+1. 新增 `StateVector::jensen_shannon_divergence()`，衡量两个量子态测量分布的 JS 散度。
+2. 新增 `Circuit::max_gates_per_qubit()`，统计单条量子线上的最大门数量。
+3. 新增 `qft_density_gap()`，比较 QFT 与逆 QFT 的门密度差异。
+4. CLI 新增 `verify-m2-dist`，集中输出 Grover 迭代数、JS 散度、TVD、往返保真度与电路负载。
+5. 补充 4 项回归测试，覆盖新 API 的数值与边界条件。
+
+验证命令：
+
+```bash
+cargo test --workspace
+cargo run -q -p qsimx-cli -- verify-m2-dist 3
+```
